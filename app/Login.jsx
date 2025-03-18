@@ -18,7 +18,7 @@ const Login = () => {
     
     try {
       console.log('Logging in...');
-      const response = await fetch(`http://192.168.1.100:8000/api/users`, {
+      const response = await fetch(`http://192.168.117.252:8000/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

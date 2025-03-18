@@ -1,9 +1,12 @@
 import React from 'react'
-import { Text } from 'react-native'
+import { View } from 'react-native'
+import QuizHome from '../../components/Quiz/QuizHome';
 
 function index() {
   return (
-    <Text>index</Text>
+    <View>
+      <QuizHome />
+    </View>
   )
 }
 

@@ -13,6 +13,8 @@ import { Provider } from "react-redux";
 import store from "../redux/store";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { View, StyleSheet } from "react-native";
+import Navbar from "../components/Navbar";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -36,14 +38,14 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  // const shouldShowNavAndFooter = !["Login", "index"].includes(segments[0]);
+  const shouldShowNavAndFooter = !["Login", "index"].includes(segments[0]);
 
   return (
     <Provider store={store}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
           {/* Conditionally render Navbar */}
-          {/* {shouldShowNavAndFooter && <Navbar />} */}
+          {shouldShowNavAndFooter && <Navbar name={"Mahesh"} />}
 
           {/* Main content */}
           <View style={styles.content}>
@@ -57,7 +59,7 @@ export default function RootLayout() {
 
           {/* Conditionally render Footer */}
           {/* {shouldShowNavAndFooter && <Footer />} */}
-        </View>
+        </SafeAreaView>
 
         <StatusBar style="auto" />
       </ThemeProvider>
