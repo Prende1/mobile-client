@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../redux/login/authSlice';
+import API_ROUTES from '../api/apiConfig';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,7 @@ const Login = () => {
     
     try {
       console.log('Logging in...');
-      const response = await fetch(`http://192.168.117.252:8000/api/users`, {
+      const response = await fetch(API_ROUTES.login, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

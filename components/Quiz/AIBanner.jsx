@@ -5,7 +5,7 @@ const AIBanner = () => {
   return (
     <View style={styles.container}>
       <Image source={require("../../assets/images/avatarAI.png")} style={styles.avatar} />
-      <Text style={styles.text}>Converse to AI & boost your thinking jjjvjh,jv</Text>
+      <Text style={styles.text}>Converse to AI & boost your thinking</Text>
     </View>
   );
 };

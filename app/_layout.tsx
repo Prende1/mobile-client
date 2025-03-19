@@ -45,7 +45,7 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <SafeAreaView style={styles.container}>
           {/* Conditionally render Navbar */}
-          {shouldShowNavAndFooter && <Navbar name={"Mahesh"} />}
+          {shouldShowNavAndFooter && <Navbar />}
 
           {/* Main content */}
           <View style={styles.content}>
@@ -53,6 +53,7 @@ export default function RootLayout() {
               <Stack.Screen name="index" />
               <Stack.Screen name="Login" />
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="QuizScreen" />
               <Stack.Screen name="+not-found" />
             </Stack>
           </View>

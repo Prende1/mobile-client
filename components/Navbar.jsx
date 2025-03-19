@@ -1,14 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
 
-const Navbar = ({ name }) => {
+const Navbar = () => {
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "");
+  const name = useSelector((state)=> state.auth.user?.username);
 
   return (
     <View style={styles.container}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{getInitial(name)}</Text>
+        <Text style={styles.avatarText}>{getInitial(name) || " "}</Text>
       </View>
       <View>
         <Text style={styles.welcomeText}>Welcome!</Text>
