@@ -1,22 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { useSelector } from "react-redux";
 import API_ROUTES from "../api/apiConfig";
+import ExplanationCard from "../components/Quiz/Explanation";
+import { useRouter } from "expo-router";
+// import { Bulb } from "lucide-react"; // Assuming you have a suitable icon library
 
 const QuizScreen = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(30); // ⏳ Timer starts at 30 seconds
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [showHint, setShowHint] = useState(false);
   const { currentQuizId } = useSelector((state) => state.quiz);
+  const router = useRouter();
 
   useEffect(() => {
     if (currentQuizId) {
-      fetch(API_ROUTES.QUIZ_BY_ID(currentQuizId))
+      fetch(API_ROUTES.getQuizById(currentQuizId))
         .then((response) => response.json())
         .then((data) => {
-          setQuestions(data.questions);
+          // Transform the data structure to match our component needs
+          // console.log("Fetched Questions:", data);
+          const formattedQuestions = data.questions.map((question) => ({
+            id: question._id,
+            question: question.title,
+            hint: question.hint,
+            choices: question.answers.map((answer) => ({
+              id: answer._id,
+              text: answer.title,
+              isCorrect: answer.reason !== "",
+              explanation: answer.reason,
+            })),
+          }));
+          setQuestions(formattedQuestions);
         })
         .catch((error) => {
           console.error("Error fetching questions:", error);
@@ -29,16 +54,21 @@ const QuizScreen = () => {
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime === 1) {
-            handleNext(); // Auto-submit when timer reaches 0
-            return 30; // Reset timer for the next question
+            handleTimeout();
+            return 30;
           }
           return prevTime - 1;
         });
       }, 1000);
 
-      return () => clearInterval(timer); // Cleanup on unmount
+      return () => clearInterval(timer);
     }
   }, [currentQuestionIndex, questions]);
+
+  const handleTimeout = () => {
+    Alert.alert("Time's up!", "Moving to the next question");
+    handleNext();
+  };
 
   if (questions.length === 0) {
     return <Text style={styles.loadingText}>Loading Questions...</Text>;
@@ -48,7 +78,7 @@ const QuizScreen = () => {
 
   const handleSelectAnswer = (answer) => {
     setSelectedAnswer(answer);
-    setIsCorrect(answer === currentQuestion.answer); // ✅ Validate answer
+    setIsCorrect(answer.isCorrect);
     setTimeLeft(30); // Reset timer when answer is selected
   };
 
@@ -57,16 +87,29 @@ const QuizScreen = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
       setIsCorrect(null);
-      setTimeLeft(30); // Reset timer for new question
+      setShowHint(false);
+      setTimeLeft(30);
     } else {
-      alert("Quiz Completed!");
+      Alert.alert("Quiz Completed!", "You've finished all questions.");
+      router.replace("/(tabs)");
     }
   };
 
+  const toggleHint = () => {
+    setShowHint(!showHint);
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Timer Display */}
       <Text style={styles.timerText}>⏳ Time Left: {timeLeft}s</Text>
+
+      {/* Question progress */}
+      <View style={styles.progressContainer}>
+        <Text style={styles.progressText}>
+          Question {currentQuestionIndex + 1} of {questions.length}
+        </Text>
+      </View>
 
       {/* Question Dots */}
       <View style={styles.dotsContainer}>
@@ -75,16 +118,30 @@ const QuizScreen = () => {
             key={index}
             style={[
               styles.dot,
-              index === currentQuestionIndex ? styles.activeDot : styles.inactiveDot,
+              index === currentQuestionIndex
+                ? styles.activeDot
+                : index < currentQuestionIndex
+                ? styles.completedDot
+                : styles.inactiveDot,
             ]}
           />
         ))}
       </View>
 
-      {/* Question */}
-      <Text style={styles.questionNumber}>
-        {currentQuestionIndex + 1}. {currentQuestion.question}
-      </Text>
+      {/* Question with Hint Icon */}
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionNumber}>{currentQuestion.question}</Text>
+        <TouchableOpacity onPress={toggleHint} style={styles.hintButton}>
+          <Text style={styles.hintIcon}>💡</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Hint display */}
+      {showHint && (
+        <View style={styles.hintContainer}>
+          <Text style={styles.hintText}>{currentQuestion.hint}</Text>
+        </View>
+      )}
 
       {/* Options */}
       <View style={styles.optionsContainer}>
@@ -93,27 +150,43 @@ const QuizScreen = () => {
             key={index}
             style={[
               styles.optionButton,
-              selectedAnswer === choice
-                ? isCorrect
+              selectedAnswer?.id === choice.id
+                ? choice.isCorrect
                   ? styles.correctOption
                   : styles.wrongOption
                 : null,
             ]}
             onPress={() => handleSelectAnswer(choice)}
-            disabled={selectedAnswer !== null} // Disable after selecting
+            disabled={selectedAnswer !== null}
           >
-            <Text style={styles.optionText}>{choice}</Text>
+            <Text style={styles.optionText}>{choice.text}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      {/* Explanation Card */}
+      {selectedAnswer && (
+        <View style={styles.explanationContainer}>
+          <ExplanationCard
+            isCorrect={isCorrect}
+            explanation={
+              selectedAnswer.explanation || "No explanation available."
+            }
+          />
+        </View>
+      )}
+
       {/* Next Button */}
       {selectedAnswer !== null && (
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
+          <Text style={styles.nextButtonText}>
+            {currentQuestionIndex < questions.length - 1
+              ? "Next Question"
+              : "Finish Quiz"}
+          </Text>
         </TouchableOpacity>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -135,6 +208,14 @@ const styles = StyleSheet.create({
     color: "#FF5733",
     marginBottom: 20,
   },
+  progressContainer: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  progressText: {
+    fontSize: 16,
+    color: "#666",
+  },
   dotsContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -149,14 +230,41 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: "#1A1E26",
   },
+  completedDot: {
+    backgroundColor: "#4CAF50",
+  },
   inactiveDot: {
     backgroundColor: "#D3D3D3",
   },
+  questionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
   questionNumber: {
+    flex: 1,
     fontSize: 18,
     fontWeight: "bold",
     color: "#1A1E26",
-    marginBottom: 10,
+  },
+  hintButton: {
+    padding: 5,
+  },
+  hintIcon: {
+    fontSize: 20,
+  },
+  hintContainer: {
+    backgroundColor: "#FFF9C4",
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FFC107",
+  },
+  hintText: {
+    color: "#5D4037",
+    fontSize: 14,
   },
   optionsContainer: {
     marginTop: 10,
@@ -181,12 +289,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1A1E26",
   },
+  explanationContainer: {
+    marginTop: 20,
+    width: "100%",
+    marginBottom: 20,
+  },
   nextButton: {
     backgroundColor: "#1A1E26",
     borderRadius: 8,
     padding: 15,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 30,
   },
   nextButtonText: {
     color: "white",

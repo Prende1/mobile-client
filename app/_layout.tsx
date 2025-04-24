@@ -13,6 +13,7 @@ import { Provider } from "react-redux";
 import store from "../redux/store";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { View, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Navbar from "../components/Navbar";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -38,20 +39,32 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  const shouldShowNavAndFooter = !["Login", "index"].includes(segments[0]);
+  const shouldShowNavAndFooter = !["LevelPage", "Login", "index","StartPage","Onboarding"].includes(
+    segments[0]
+  );
 
   return (
     <Provider store={store}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <LinearGradient
+            colors={["#1C1E46", "#131425"]}
+            style={styles.gradientBackground}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+            locations={[0, 1]}
+          />
           {/* Conditionally render Navbar */}
           {shouldShowNavAndFooter && <Navbar />}
 
           {/* Main content */}
-          <View style={styles.content}>
+          <View style={[styles.content]}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="Login" />
+              <Stack.Screen name="LevelPage" />
+              <Stack.Screen name="StartPage" />
+              <Stack.Screen name="Onboarding" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="QuizScreen" />
               <Stack.Screen name="+not-found" />
@@ -71,9 +84,23 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "transparent",
   },
   content: {
     flex: 1,
-    backgroundColor: "#F0F4F6",
+    backgroundColor: "transparent",
+  },
+  gradientBackground: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: -1,
   },
 });

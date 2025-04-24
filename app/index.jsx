@@ -24,7 +24,7 @@ const Index = () => {
           router.replace("/(tabs)");
         } else {
           console.log("No token found, navigating to login screen");
-          router.replace("/Login");
+          router.replace("/Onboarding");
         }
       } catch (error) {
         console.error("Error checking token:", error);
