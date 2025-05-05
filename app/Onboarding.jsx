@@ -55,7 +55,7 @@ const Onboarding = () => {
   };
 
   const skipOnboarding = () => {
-    router.replace("/StartPage"); // Replace with your navigation logic
+    router.replace("/Login"); // Replace with your navigation logic
   };
 
   const handleScroll = (event) => {

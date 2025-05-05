@@ -22,7 +22,7 @@ const StartPage = () => {
         />
       </View>
       
-      <TouchableOpacity style={styles.button} onPress={() => router.replace("/Login")}>
+      <TouchableOpacity style={styles.button} onPress={() => router.replace("/Onboarding")}>
         <Text style={styles.buttonText}>Let's Start</Text>
       </TouchableOpacity>
     </View>

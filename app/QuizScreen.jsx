@@ -17,7 +17,6 @@ const QuizScreen = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [isCorrect, setIsCorrect] = useState(null);
   const [timeLeft, setTimeLeft] = useState(30);
   const [showHint, setShowHint] = useState(false);
   const { currentQuizId } = useSelector((state) => state.quiz);
@@ -34,11 +33,11 @@ const QuizScreen = () => {
             id: question._id,
             question: question.title,
             hint: question.hint,
+            correctAnswerId: question.correctAnswerId,
             choices: question.answers.map((answer) => ({
               id: answer._id,
               text: answer.title,
-              isCorrect: answer.reason !== "",
-              explanation: answer.reason,
+              explanation: answer.reason || "",
             })),
           }));
           setQuestions(formattedQuestions);
@@ -78,15 +77,13 @@ const QuizScreen = () => {
 
   const handleSelectAnswer = (answer) => {
     setSelectedAnswer(answer);
-    setIsCorrect(answer.isCorrect);
-    setTimeLeft(30); // Reset timer when answer is selected
+    setTimeLeft(30); // reset timer
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
-      setIsCorrect(null);
       setShowHint(false);
       setTimeLeft(30);
     } else {
@@ -150,11 +147,10 @@ const QuizScreen = () => {
             key={index}
             style={[
               styles.optionButton,
-              selectedAnswer?.id === choice.id
-                ? choice.isCorrect
+              selectedAnswer?.id === choice.id &&
+                (choice.id === currentQuestion.correctAnswerId
                   ? styles.correctOption
-                  : styles.wrongOption
-                : null,
+                  : styles.wrongOption),
             ]}
             onPress={() => handleSelectAnswer(choice)}
             disabled={selectedAnswer !== null}
@@ -168,7 +164,7 @@ const QuizScreen = () => {
       {selectedAnswer && (
         <View style={styles.explanationContainer}>
           <ExplanationCard
-            isCorrect={isCorrect}
+            isCorrect={selectedAnswer.id === currentQuestion.correctAnswerId}
             explanation={
               selectedAnswer.explanation || "No explanation available."
             }
