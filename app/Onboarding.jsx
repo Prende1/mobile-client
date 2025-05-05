@@ -9,12 +9,14 @@ import {
   FlatList,
   SafeAreaView,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
 const Onboarding = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
+  const router = useRouter(); // Assuming you are using a router like React Router or React Navigation
 
   // Onboarding data - add your content and images here
   const onboardingData = [
@@ -47,16 +49,13 @@ const Onboarding = () => {
     } else {
       // Navigate to the main app when onboarding is complete
       // Replace this with your navigation logic
-      console.log("Onboarding complete");
+      skipOnboarding(); // For example, you can use React Navigation's navigation.navigate('Home') or similar
       // navigation.replace('Home');
     }
   };
 
   const skipOnboarding = () => {
-    // Skip to the main app
-    // Replace this with your navigation logic
-    console.log("Skipped onboarding");
-    // navigation.replace('Home');
+    router.replace("/StartPage"); // Replace with your navigation logic
   };
 
   const handleScroll = (event) => {
@@ -118,7 +117,7 @@ const Onboarding = () => {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={goToNextSlide}>
+          <TouchableOpacity style={styles.button} onPress={currentIndex === onboardingData.length - 1 ? skipOnboarding : goToNextSlide}>
             <Text style={styles.buttonText}>
               {currentIndex === onboardingData.length - 1
                 ? "Get Started"

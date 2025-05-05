@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const StartPage = () => {
+  const router = useRouter(); // Assuming you are using a router like React Router or React Navigation
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -20,7 +22,7 @@ const StartPage = () => {
         />
       </View>
       
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => router.replace("/Login")}>
         <Text style={styles.buttonText}>Let's Start</Text>
       </TouchableOpacity>
     </View>
