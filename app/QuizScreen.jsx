@@ -11,7 +11,6 @@ import { useSelector } from "react-redux";
 import API_ROUTES from "../api/apiConfig";
 import ExplanationCard from "../components/Quiz/Explanation";
 import { useRouter } from "expo-router";
-// import { Bulb } from "lucide-react"; // Assuming you have a suitable icon library
 
 const QuizScreen = () => {
   const [questions, setQuestions] = useState([]);
@@ -20,6 +19,8 @@ const QuizScreen = () => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [showHint, setShowHint] = useState(false);
   const { currentQuizId } = useSelector((state) => state.quiz);
+  const { user } = useSelector((state) => state.auth);
+  const [startTime, setStartTime] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const QuizScreen = () => {
 
   useEffect(() => {
     if (questions.length > 0) {
+      setStartTime(new Date());
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime === 1) {
@@ -76,6 +78,30 @@ const QuizScreen = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleSelectAnswer = (answer) => {
+    try {
+      fetch(API_ROUTES.submitAnswer, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userID : user._id,
+          quizID: currentQuizId,
+          questionID: currentQuestion.id,
+          answerID: answer.id,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Answer submitted:", data);
+        })
+        .catch((error) => {
+          console.error("Error submitting answer:", error);
+        });
+        // console.log("Selected Answer:", answer);
+    }catch (error) {
+      console.error("Error in handleSelectAnswer:", error);
+    }
     setSelectedAnswer(answer);
     setTimeLeft(30); // reset timer
   };
@@ -87,6 +113,30 @@ const QuizScreen = () => {
       setShowHint(false);
       setTimeLeft(30);
     } else {
+      // Submit the quiz result
+      try{
+        fetch(API_ROUTES.submitQuizResult, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userID: user._id,
+            quizID: currentQuizId,
+            startedTS: startTime?.toISOString(),
+            endTS: new Date().toISOString(),
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Quiz result submitted:", data);
+          })
+          .catch((error) => {
+            console.error("Error submitting quiz result:", error);
+          });
+      }catch (error) {
+        console.error("Error in handleNext:", error);
+      }
       Alert.alert("Quiz Completed!", "You've finished all questions.");
       router.replace("/(tabs)");
     }
