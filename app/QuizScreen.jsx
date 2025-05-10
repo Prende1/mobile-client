@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import { useSelector } from "react-redux";
 import API_ROUTES from "../api/apiConfig";
 import ExplanationCard from "../components/Quiz/Explanation";
 import { useRouter } from "expo-router";
+import QuizCompletionPopup from "../components/Quiz/ScorePopup";
+import { setQuizScore } from "../redux/quiz/quizScore";
+import { useDispatch } from "react-redux";
 
 const QuizScreen = () => {
   const [questions, setQuestions] = useState([]);
@@ -22,14 +25,17 @@ const QuizScreen = () => {
   const { user } = useSelector((state) => state.auth);
   const [startTime, setStartTime] = useState(null);
   const router = useRouter();
+  const dispatch = useDispatch();
+  const timerRef = useRef(null);
+  
+  // Quiz result state
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
     if (currentQuizId) {
       fetch(API_ROUTES.getQuizById(currentQuizId))
         .then((response) => response.json())
         .then((data) => {
-          // Transform the data structure to match our component needs
-          // console.log("Fetched Questions:", data);
           const formattedQuestions = data.questions.map((question) => ({
             id: question._id,
             question: question.title,
@@ -50,9 +56,16 @@ const QuizScreen = () => {
   }, [currentQuizId]);
 
   useEffect(() => {
-    if (questions.length > 0) {
-      setStartTime(new Date());
-      const timer = setInterval(() => {
+    // Clean up any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Only start a new timer if the quiz is not completed and we have questions
+    if (questions.length > 0 && !quizCompleted) {
+      setStartTime((prev) => prev || new Date());
+      timerRef.current = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime === 1) {
             handleTimeout();
@@ -61,14 +74,21 @@ const QuizScreen = () => {
           return prevTime - 1;
         });
       }, 1000);
-
-      return () => clearInterval(timer);
     }
-  }, [currentQuestionIndex, questions]);
+
+    // Clean up when component unmounts or quiz completes
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [currentQuestionIndex, questions, quizCompleted]);
 
   const handleTimeout = () => {
-    Alert.alert("Time's up!", "Moving to the next question");
-    handleNext();
+    if (!quizCompleted) {
+      Alert.alert("Time's up!", "Moving to the next question");
+      handleNext();
+    }
   };
 
   if (questions.length === 0) {
@@ -78,6 +98,8 @@ const QuizScreen = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleSelectAnswer = (answer) => {
+    if (quizCompleted) return;
+    
     try {
       fetch(API_ROUTES.submitAnswer, {
         method: "POST",
@@ -85,7 +107,7 @@ const QuizScreen = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userID : user._id,
+          userID: user._id,
           quizID: currentQuizId,
           questionID: currentQuestion.id,
           answerID: answer.id,
@@ -98,8 +120,7 @@ const QuizScreen = () => {
         .catch((error) => {
           console.error("Error submitting answer:", error);
         });
-        // console.log("Selected Answer:", answer);
-    }catch (error) {
+    } catch (error) {
       console.error("Error in handleSelectAnswer:", error);
     }
     setSelectedAnswer(answer);
@@ -107,14 +128,22 @@ const QuizScreen = () => {
   };
 
   const handleNext = () => {
+    if (quizCompleted) return;
+    
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
       setShowHint(false);
       setTimeLeft(30);
     } else {
+      // Clear the timer when quiz is completed
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
       // Submit the quiz result
-      try{
+      try {
         fetch(API_ROUTES.submitQuizResult, {
           method: "POST",
           headers: {
@@ -130,26 +159,47 @@ const QuizScreen = () => {
           .then((response) => response.json())
           .then((data) => {
             console.log("Quiz result submitted:", data);
+            dispatch(setQuizScore(data.result));
+            setQuizCompleted(true);
           })
           .catch((error) => {
             console.error("Error submitting quiz result:", error);
           });
-      }catch (error) {
+      } catch (error) {
         console.error("Error in handleNext:", error);
       }
-      Alert.alert("Quiz Completed!", "You've finished all questions.");
-      router.replace("/(tabs)");
     }
   };
 
+  const handleNavigateHome = () => {
+    setQuizCompleted(false);
+    router.replace("/(tabs)");
+  };
+
+  const handleCheckReport = () => {
+    setQuizCompleted(false);
+    router.replace("/quiz-report");
+  };
+
   const toggleHint = () => {
+    if (quizCompleted) return;
     setShowHint(!showHint);
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Timer Display */}
-      <Text style={styles.timerText}>⏳ Time Left: {timeLeft}s</Text>
+      {/* Quiz Completion Popup */}
+      <QuizCompletionPopup
+        visible={quizCompleted}
+        onClose={() => setQuizCompleted(false)}
+        onCheckReport={handleCheckReport}
+        onNavigateHome={handleNavigateHome}
+      />
+
+      {/* Only show timer when quiz is not completed */}
+      {!quizCompleted && (
+        <Text style={styles.timerText}>⏳ Time Left: {timeLeft}s</Text>
+      )}
 
       {/* Question progress */}
       <View style={styles.progressContainer}>
@@ -178,13 +228,17 @@ const QuizScreen = () => {
       {/* Question with Hint Icon */}
       <View style={styles.questionContainer}>
         <Text style={styles.questionNumber}>{currentQuestion.question}</Text>
-        <TouchableOpacity onPress={toggleHint} style={styles.hintButton}>
+        <TouchableOpacity 
+          onPress={toggleHint} 
+          style={styles.hintButton}
+          disabled={quizCompleted}
+        >
           <Text style={styles.hintIcon}>💡</Text>
         </TouchableOpacity>
       </View>
 
       {/* Hint display */}
-      {showHint && (
+      {showHint && !quizCompleted && (
         <View style={styles.hintContainer}>
           <Text style={styles.hintText}>{currentQuestion.hint}</Text>
         </View>
@@ -203,7 +257,7 @@ const QuizScreen = () => {
                   : styles.wrongOption),
             ]}
             onPress={() => handleSelectAnswer(choice)}
-            disabled={selectedAnswer !== null}
+            disabled={selectedAnswer !== null || quizCompleted}
           >
             <Text style={styles.optionText}>{choice.text}</Text>
           </TouchableOpacity>
@@ -211,7 +265,7 @@ const QuizScreen = () => {
       </View>
 
       {/* Explanation Card */}
-      {selectedAnswer && (
+      {selectedAnswer && !quizCompleted && (
         <View style={styles.explanationContainer}>
           <ExplanationCard
             isCorrect={selectedAnswer.id === currentQuestion.correctAnswerId}
@@ -222,8 +276,8 @@ const QuizScreen = () => {
         </View>
       )}
 
-      {/* Next Button */}
-      {selectedAnswer !== null && (
+      {/* Next Button - only visible when an answer is selected and quiz is not completed */}
+      {selectedAnswer !== null && !quizCompleted && (
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>
             {currentQuestionIndex < questions.length - 1
