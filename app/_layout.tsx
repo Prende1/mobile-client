@@ -39,9 +39,9 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  const shouldShowNavAndFooter = !["LevelPage", "Login", "index","StartPage","Onboarding"].includes(
-    segments[0]
-  );
+  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "StartPage", "Onboarding"].includes(
+  segments[0]
+) && segments[1] !== "wordScreen";
 
   return (
     <Provider store={store}>

@@ -18,7 +18,7 @@ const QuizHome = () => {
         const data = await response.json();
         //console.log("Fetched Quizzes:", data);
         dispatch(setQuiz(data));
-        console.log(quiz);
+        // console.log(quiz);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
       } finally {
