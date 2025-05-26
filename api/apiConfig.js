@@ -12,6 +12,7 @@ export const API_ROUTES = {
   addWord: `${BASE_URL}/words`,
   getQuestions: (wordId) => `${BASE_URL}/wordQuestion/${wordId}`, // Fetch questions for a specific word
   createWordQuestion: `${BASE_URL}/wordQuestion`, // Create a new word question
+  getWordAnswers: (wqID) => `${BASE_URL}/wordAnswer/${wqID}`, // Fetch answers for a specific word question
   createWordAnswer: `${BASE_URL}/wordAnswer`, // Create a new word answer
 };
 

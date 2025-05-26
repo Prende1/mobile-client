@@ -15,17 +15,14 @@ import { Ionicons } from '@expo/vector-icons';
 import API_ROUTES from '../../api/apiConfig';
 import { useSelector } from 'react-redux';
 
-const AddQuestionModal = ({ visible, onClose, wordId, onQuestionAdded }) => {
-  const [question, setQuestion] = useState('');
-  const [createdBy, setCreatedBy] = useState('');
-  const [reviewedBy, setReviewedBy] = useState('AI');
+const AddAnswerModal = ({ visible, onClose, onAnswerAdded }) => {
+  const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
-  const name = useSelector((state)=> state.auth.user?.username);
+  const username = useSelector((state) => state.auth.user?.username);
+  const {currentWordId , currentQuestionId} = useSelector((state) => state.word);
 
   const resetForm = () => {
-    setQuestion('');
-    setCreatedBy('');
-    setReviewedBy('AI');
+    setAnswer('');
   };
 
   const handleClose = () => {
@@ -35,54 +32,61 @@ const AddQuestionModal = ({ visible, onClose, wordId, onQuestionAdded }) => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!question.trim()) {
-      Alert.alert('Error', 'Please enter a question');
+    if (!answer.trim()) {
+      Alert.alert('Error', 'Please enter an answer');
+      return;
+    }
+
+    if (!username) {
+      Alert.alert('Error', 'User not logged in');
       return;
     }
 
     try {
       setLoading(true);
       
-      const response = await fetch(API_ROUTES.createWordQuestion, {
+      const response = await fetch(API_ROUTES.createWordAnswer, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          wordID: wordId,
-          question: question.trim(),
-          created_by: name,
-          reviewed_by: reviewedBy.trim(),
+          wordID: currentWordId,
+          wqID: currentQuestionId,
+          answer: answer.trim(),
+          answered_by: username,
         }),
       });
 
       const data = await response.json();
-      if(response.status === 400) {
-        Alert.alert('Error', data.error || 'Failed to add question');
+      
+      if (response.status === 400) {
+        Alert.alert('Error', data.error || 'Failed to add answer');
         return;
       }
+      
       if (response.ok) {
         Alert.alert(
           'Success', 
-          'Question added successfully!',
+          'Answer submitted successfully! AI is reviewing your answer.',
           [
             {
               text: 'OK',
               onPress: () => {
                 resetForm();
                 onClose();
-                if (onQuestionAdded) {
-                  onQuestionAdded(); // Refresh the questions list
+                if (onAnswerAdded) {
+                  onAnswerAdded(); // Refresh the answers list
                 }
               }
             }
           ]
         );
       } else {
-        Alert.alert('Error', data.message || 'Failed to add question');
+        Alert.alert('Error', data.error || data.message || 'Failed to add answer');
       }
     } catch (error) {
-      console.error('Error adding question:', error);
+      console.error('Error adding answer:', error);
       Alert.alert('Error', 'Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -104,7 +108,7 @@ const AddQuestionModal = ({ visible, onClose, wordId, onQuestionAdded }) => {
           <View style={styles.modalContainer}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Ask a Question</Text>
+              <Text style={styles.headerTitle}>Add Your Answer</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={handleClose}
@@ -114,39 +118,43 @@ const AddQuestionModal = ({ visible, onClose, wordId, onQuestionAdded }) => {
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-              {/* Question Input */}
+              {/* Answer Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Question *</Text>
+                <Text style={styles.label}>Your Answer *</Text>
                 <TextInput
                   style={styles.textArea}
-                  placeholder="What would you like to know about this word?"
+                  placeholder="Share your knowledge and help others understand this word better..."
                   placeholderTextColor="#9ca3af"
-                  value={question}
-                  onChangeText={setQuestion}
+                  value={answer}
+                  onChangeText={setAnswer}
                   multiline
-                  numberOfLines={4}
+                  numberOfLines={6}
                   textAlignVertical="top"
                 />
+                <Text style={styles.helperText}>
+                  Provide a clear, helpful explanation. Our AI will review and score your answer.
+                </Text>
               </View>
 
+              {/* User Info Display */}
+              <View style={styles.infoGroup}>
+                <Text style={styles.infoLabel}>Submitted by:</Text>
+                <Text style={styles.infoValue}>{username || 'Unknown User'}</Text>
+              </View>
 
-              {/* Reviewed By Input */}
-              {/* <View style={styles.inputGroup}>
-                <Text style={styles.label}>Reviewed By</Text>
-                <View style={styles.reviewedByContainer}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Who will review this question?"
-                    placeholderTextColor="#9ca3af"
-                    value={reviewedBy}
-                    onChangeText={setReviewedBy}
-                  />
-                  <Text style={styles.helperText}>
-                    Default: AI (can be changed to specific reviewer)
-                  </Text>
-                </View>
-              </View> */}
+              <View style={styles.infoGroup}>
+                <Text style={styles.infoLabel}>Will be reviewed by:</Text>
+                <Text style={styles.infoValue}>AI (Gemini-2.0)</Text>
+              </View>
 
+              {/* Tips Section */}
+              <View style={styles.tipsContainer}>
+                <Text style={styles.tipsTitle}>💡 Tips for a great answer:</Text>
+                <Text style={styles.tipText}>• Be clear and concise</Text>
+                <Text style={styles.tipText}>• Include examples when helpful</Text>
+                <Text style={styles.tipText}>• Use appropriate language for your audience</Text>
+                <Text style={styles.tipText}>• Check your grammar and spelling</Text>
+              </View>
             </ScrollView>
 
             {/* Footer Buttons */}
@@ -165,7 +173,7 @@ const AddQuestionModal = ({ visible, onClose, wordId, onQuestionAdded }) => {
                 disabled={loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {loading ? 'Adding...' : 'Add Question'}
+                  {loading ? 'Submitting...' : 'Submit Answer'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -191,7 +199,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
-    minHeight: '60%',
+    minHeight: '70%',
   },
   header: {
     flexDirection: 'row',
@@ -222,15 +230,6 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
-  textInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#111827',
-  },
   textArea: {
     backgroundColor: '#f9fafb',
     borderWidth: 1,
@@ -239,15 +238,53 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: '#111827',
-    minHeight: 100,
-  },
-  reviewedByContainer: {
-    gap: 4,
+    minHeight: 120,
   },
   helperText: {
     fontSize: 12,
     color: '#6b7280',
     fontStyle: 'italic',
+    marginTop: 4,
+  },
+  infoGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  tipsContainer: {
+    backgroundColor: '#f0f9ff',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#06B6D4',
+    marginBottom: 30,
+  },
+  tipsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0c4a6e',
+    marginBottom: 8,
+  },
+  tipText: {
+    fontSize: 12,
+    color: '#0369a1',
+    marginBottom: 4,
+    lineHeight: 16,
   },
   footer: {
     flexDirection: 'row',
@@ -287,4 +324,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddQuestionModal;
+export default AddAnswerModal;

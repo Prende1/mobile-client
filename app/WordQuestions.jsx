@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import API_ROUTES from "../api/apiConfig";
 import { useRouter } from 'expo-router';
 import AddQuestionModal from '../components/Words/AddQuestionModal';
+import { useDispatch } from "react-redux";
+import { setCurrentQuestionId } from "@/redux/word/word";
 
 const WordQuestions = () => {
   const router = useRouter();
@@ -21,6 +23,7 @@ const WordQuestions = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const dispatch = useDispatch();
 
   const getQuestionList = async () => {
     try {
@@ -85,9 +88,8 @@ const WordQuestions = () => {
   };
 
   const handleQuestionPress = (questionId) => {
-    console.log('Question pressed:', questionId);
-    // Navigate to question detail page
-    // router.push(`/questions/${questionId}`);
+    dispatch(setCurrentQuestionId(questionId));
+    router.push("WordAnswers");
   };
 
   const handleAskQuestion = () => {
@@ -177,14 +179,14 @@ const WordQuestions = () => {
                       <Text style={styles.questionTitle}>{question.title}</Text>
                       <Text style={styles.creatorText}>Created by {question.creator}</Text>
                       <Text style={styles.reviewerText}>Reviewed by {question.reviewer}</Text>
-                      <Text style={styles.dateText}>Created: {question.createdDate}</Text>
+                      {/* <Text style={styles.dateText}>Created: {question.createdDate}</Text> */}
                     </View>
                     
                     <View style={styles.questionRight}>
-                      <Text style={styles.chevron}>›</Text>
+                      <Ionicons name="chevron-forward" size={22} color="#333" />
                       <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
-                          <Text style={styles.statIcon}>♡</Text>
+                          <Ionicons name="thumbs-up" size={20} color="#6b7280" />
                           <Text style={styles.statText}>{question.likes}</Text>
                         </View>
                         {/* <View style={styles.statItem}>
@@ -340,9 +342,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginTop: 20,
   },
   statIcon: {
-    fontSize: 16,
+    fontSize: 20,
   },
   statText: {
     color: '#6b7280',

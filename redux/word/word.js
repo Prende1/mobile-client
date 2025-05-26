@@ -6,6 +6,7 @@ const wordSlice = createSlice({
     questions: [],
     currentWordId: null,
     currentQuestionId: null,
+    currentQuestion : null, // This can be used to store the current question details if needed
   },
   reducers: {
     setQuestions: (state, action) => {
@@ -17,6 +18,9 @@ const wordSlice = createSlice({
     setCurrentQuestionId : (state, action) => {
       state.currentQuestionId = action.payload
     },
+    setCurrentQuestion : (state, action) => {
+      state.currentQuestion = action.payload; // Setting the current question details
+    }
   },
 });
 
