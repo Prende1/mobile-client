@@ -68,7 +68,7 @@ const AddAnswerModal = ({ visible, onClose, onAnswerAdded }) => {
       if (response.ok) {
         Alert.alert(
           'Success', 
-          'Answer submitted successfully! AI is reviewing your answer.',
+          'Answer submitted successfully! Answer is reviewed by AI.',
           [
             {
               text: 'OK',
