@@ -2,6 +2,7 @@ const BASE_URL = "https://vocab-server-fkrv.onrender.com/api"; // Change this to
 
 export const API_ROUTES = {
   login: `${BASE_URL}/users`,
+  getUserById: (id) => `${BASE_URL}/users/${id}`, // Fetch user by ID
   QUIZZES: `${BASE_URL}/quizzes`, // Fetch all quizzes
   getQuizById : (id) => `${BASE_URL}/getQuiz/${id}/questions`,
   QUIZ_BY_ID: (id) => `${BASE_URL}/quiz/${id}`, // Fetch a single quiz by ID
@@ -9,6 +10,9 @@ export const API_ROUTES = {
   submitQuizResult: `${BASE_URL}/quiz-results`, // Submit quiz result
   getWords: `${BASE_URL}/words`,
   addWord: `${BASE_URL}/words`,
+  getQuestions: (wordId) => `${BASE_URL}/wordQuestion/${wordId}`, // Fetch questions for a specific word
+  createWordQuestion: `${BASE_URL}/wordQuestion`, // Create a new word question
+  createWordAnswer: `${BASE_URL}/wordAnswer`, // Create a new word answer
 };
 
 export default API_ROUTES;

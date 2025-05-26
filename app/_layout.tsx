@@ -39,7 +39,7 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "StartPage", "Onboarding"].includes(
+  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "StartPage", "Onboarding","WordQuestions"].includes(
   segments[0]
 ) && segments[1] !== "wordScreen";
 
@@ -68,6 +68,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="QuizScreen" />
               <Stack.Screen name="+not-found" />
+              <Stack.Screen name="WordQuestions" />
             </Stack>
           </View>
 

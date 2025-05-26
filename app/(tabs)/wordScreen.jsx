@@ -1,3 +1,8 @@
+/*
+  WordScreen.jsx
+  This file is Main Screen of words.
+*/
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -14,9 +19,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Picker } from "@react-native-picker/picker";
 import API_ROUTES from "../../api/apiConfig";
+import { useDispatch } from "react-redux";
+import { setCurrentWordId } from "@/redux/word/word";
 
 export default function WordScreen() {
   const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch();
   const [wordList, setWordList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newWord, setNewWord] = useState({
@@ -82,6 +90,11 @@ export default function WordScreen() {
     }
   };
 
+  const handleWord = (id) => {
+    dispatch(setCurrentWordId(id));
+    router.push("WordQuestions");
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with back button */}
@@ -137,13 +150,13 @@ export default function WordScreen() {
           }
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
-            <View style={styles.wordCard}>
+            <TouchableOpacity style={styles.wordCard} onPress={() => handleWord(item._id)}>
               <View>
                 <Text style={styles.wordText}>{item.title}</Text>
                 <Text style={styles.wordType}>({item.category})</Text>
               </View>
               <Ionicons name="chevron-forward" size={22} color="#333" />
-            </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={
             <Text
