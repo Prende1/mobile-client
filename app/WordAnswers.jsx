@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,13 @@ import API_ROUTES from "../api/apiConfig";
 import AddAnswerModal from "../components/Words/AddAnswerModal";
 
 const WordAnswers = () => {
-  const [selectedFilter, setSelectedFilter] = useState("All high");
+  const [selectedFilter, setSelectedFilter] = useState("All");
   const { currentQuestionId } = useSelector((state) => state.word);
+  const { username: currentUsername } = useSelector((state) => state.auth.user);
+  
   console.log("Current Question ID:", currentQuestionId);
+  console.log("Current Username:", currentUsername);
+  
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState([]);
@@ -62,7 +66,31 @@ const WordAnswers = () => {
     return authorId || "Unknown Author";
   };
 
-  const filters = ["Admin >", "All high >", "User high >", "Mine >"];
+  // Filter answers based on selected filter
+  const filteredAnswers = useMemo(() => {
+    if (!currentUsername) {
+      // If no current user, show all answers
+      return answers;
+    }
+
+    switch (selectedFilter) {
+      case "All":
+        return answers;
+      
+      case "Users":
+        // Show answers from other users (not current user)
+        return answers.filter(answer => answer.answered_by !== currentUsername);
+      
+      case "Mine":
+        // Show only current user's answers
+        return answers.filter(answer => answer.answered_by === currentUsername);
+      
+      default:
+        return answers;
+    }
+  }, [answers, selectedFilter, currentUsername]);
+
+  const filters = ["All", "Users", "Mine"];
 
   const handleFilterPress = (filter) => {
     setSelectedFilter(filter);
@@ -126,6 +154,17 @@ const WordAnswers = () => {
                 ]}
               >
                 {filter}
+                {filter !== "All" && (
+                  <Text style={styles.filterCount}>
+                    {" "}({
+                      filter === "Users" 
+                        ? answers.filter(answer => answer.answered_by !== currentUsername).length
+                        : filter === "Mine"
+                        ? answers.filter(answer => answer.answered_by === currentUsername).length
+                        : answers.length
+                    })
+                  </Text>
+                )}
               </Text>
             </TouchableOpacity>
           ))}
@@ -139,22 +178,33 @@ const WordAnswers = () => {
         )}
 
         {/* No Answers State */}
-        {!loading && answers.length === 0 && (
+        {!loading && filteredAnswers.length === 0 && (
           <View style={styles.noAnswersContainer}>
-            <Text style={styles.noAnswersText}>No answers found for this question.</Text>
+            <Text style={styles.noAnswersText}>
+              {selectedFilter === "All" 
+                ? "No answers found for this question."
+                : selectedFilter === "Users"
+                ? "No answers from other users found."
+                : "You haven't answered this question yet."
+              }
+            </Text>
           </View>
         )}
 
         {/* Answers List */}
         <View style={styles.answersList}>
-          {answers.map((answer) => (
+          {filteredAnswers.map((answer) => (
             <View key={answer._id} style={styles.answerCard}>
               {/* Answer Header */}
               <View style={styles.answerHeader}>
                 <Text style={styles.authorText}>
                   Answer by{" "}
-                  <Text style={styles.authorName}>
+                  <Text style={[
+                    styles.authorName,
+                    answer.answered_by === currentUsername && styles.currentUserName
+                  ]}>
                     {getAuthorName(answer.answered_by)}
+                    {answer.answered_by === currentUsername && " (You)"}
                   </Text>
                 </Text>
                 <Text style={styles.reviewerText}>
@@ -296,6 +346,10 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: "white",
   },
+  filterCount: {
+    fontSize: 12,
+    opacity: 0.8,
+  },
   loadingContainer: {
     padding: 20,
     alignItems: "center",
@@ -332,6 +386,10 @@ const styles = StyleSheet.create({
   authorName: {
     color: "#111827",
     fontWeight: "500",
+  },
+  currentUserName: {
+    color: "#06B6D4",
+    fontWeight: "600",
   },
   reviewerText: {
     fontSize: 14,

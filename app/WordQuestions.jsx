@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,13 @@ const WordQuestions = () => {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState('All');
   const { currentWordId } = useSelector((state) => state.word);
+  // Get current user information from Redux state
+  // Adjust this selector based on your actual Redux state structure
+  const { username: currentUsername } = useSelector((state) => state.auth.user);
+
   console.log("Current Word ID:", currentWordId);
+  console.log("Current Username:", currentUsername);
+  
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -78,10 +84,36 @@ const WordQuestions = () => {
     likes: q.num_vote || 0,
     comments: q.num_ans || 0,
     createdDate: new Date(q.created_ts).toLocaleDateString(),
-    updatedDate: new Date(q.updated_ts).toLocaleDateString()
+    updatedDate: new Date(q.updated_ts).toLocaleDateString(),
+    // Keep original creator for filtering
+    originalCreator: q.created_by
   })) : [];
 
-  const filters = ['Admin', 'All', 'Approved', 'Users', 'Mine'];
+  // Filter questions based on selected filter
+  const filteredQuestions = useMemo(() => {
+    if (!currentUsername) {
+      // If no current user, show all questions
+      return mappedQuestions;
+    }
+
+    switch (selectedFilter) {
+      case "All":
+        return mappedQuestions;
+      
+      case "Users":
+        // Show questions from other users (not current user)
+        return mappedQuestions.filter(question => question.originalCreator !== currentUsername);
+      
+      case "Mine":
+        // Show only current user's questions
+        return mappedQuestions.filter(question => question.originalCreator === currentUsername);
+      
+      default:
+        return mappedQuestions;
+    }
+  }, [mappedQuestions, selectedFilter, currentUsername]);
+
+  const filters = ['All', 'Users', 'Mine'];
 
   const handleFilterPress = (filter) => {
     setSelectedFilter(filter);
@@ -159,7 +191,17 @@ const WordQuestions = () => {
                   selectedFilter === filter && styles.filterButtonTextActive
                 ]}>
                   {filter}
-                  {filter !== 'All' && ' >'}
+                  {filter !== 'All' && (
+                    <Text style={styles.filterCount}>
+                      {" "}({
+                        filter === "Users" 
+                          ? mappedQuestions.filter(q => q.originalCreator !== currentUsername).length
+                          : filter === "Mine"
+                          ? mappedQuestions.filter(q => q.originalCreator === currentUsername).length
+                          : mappedQuestions.length
+                      })
+                    </Text>
+                  )}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -167,8 +209,8 @@ const WordQuestions = () => {
           
           {/* Questions List */}
           <View style={styles.questionsList}>
-            {mappedQuestions.length > 0 ? (
-              mappedQuestions.map((question) => (
+            {filteredQuestions.length > 0 ? (
+              filteredQuestions.map((question) => (
                 <TouchableOpacity
                   key={question.id}
                   style={styles.questionCard}
@@ -177,7 +219,16 @@ const WordQuestions = () => {
                   <View style={styles.questionContent}>
                     <View style={styles.questionLeft}>
                       <Text style={styles.questionTitle}>{question.title}</Text>
-                      <Text style={styles.creatorText}>Created by {question.creator}</Text>
+                      <Text style={styles.creatorText}>
+                        Created by{" "}
+                        <Text style={[
+                          styles.creatorName,
+                          question.originalCreator === currentUsername && styles.currentUserName
+                        ]}>
+                          {question.creator}
+                          {question.originalCreator === currentUsername && " (You)"}
+                        </Text>
+                      </Text>
                       <Text style={styles.reviewerText}>Reviewed by {question.reviewer}</Text>
                       {/* <Text style={styles.dateText}>Created: {question.createdDate}</Text> */}
                     </View>
@@ -200,9 +251,18 @@ const WordQuestions = () => {
               ))
             ) : (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No questions found for this word.</Text>
+                <Text style={styles.emptyText}>
+                  {selectedFilter === "All" 
+                    ? "No questions found for this word."
+                    : selectedFilter === "Users"
+                    ? "No questions from other users found."
+                    : "You haven't asked any questions for this word yet."
+                  }
+                </Text>
                 <TouchableOpacity style={styles.emptyButton} onPress={handleAskQuestion}>
-                  <Text style={styles.emptyButtonText}>Be the first to ask!</Text>
+                  <Text style={styles.emptyButtonText}>
+                    {selectedFilter === "Mine" ? "Ask your first question!" : "Be the first to ask!"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -288,6 +348,10 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: 'white',
   },
+  filterCount: {
+    fontSize: 12,
+    opacity: 0.8,
+  },
   questionsList: {
     gap: 12,
   },
@@ -316,6 +380,14 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontSize: 14,
     marginBottom: 2,
+  },
+  creatorName: {
+    color: '#111827',
+    fontWeight: '500',
+  },
+  currentUserName: {
+    color: '#06B6D4',
+    fontWeight: '600',
   },
   reviewerText: {
     color: '#2563eb',
