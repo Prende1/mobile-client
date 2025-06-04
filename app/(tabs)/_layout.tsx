@@ -148,6 +148,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "",
+          tabBarStyle: { display: "none" },
           tabBarIcon: ({ color,focused }) => <ProfileTab color={color} focused={focused} />,
         }}
       />
