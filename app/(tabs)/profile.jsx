@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import EditProfileModal from "../../components/EditProfileModal";
 import { useSelector } from "react-redux";
+import API_ROUTES from "../../api/apiConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -34,10 +35,28 @@ export default function ProfileScreen() {
     isPremium: user?.premium || false,
   });
 
-  const handleSaveProfile = (updatedProfile) => {
-    setUserProfile(updatedProfile);
-    setEditModalVisible(false);
-    Alert.alert("Success", "Profile updated successfully!");
+  const handleSaveProfile = async (updatedProfile) => {
+    try{
+      const userData = {
+        username: updatedProfile.name,
+        email: updatedProfile.email,
+        phone: updatedProfile.phone,
+        level: updatedProfile.level,
+        premium: updatedProfile.isPremium,
+      };
+      const res = await fetch(API_ROUTES.updateUser(user._id), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+      setUserProfile(res.data)
+      setEditModalVisible(false);
+      Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+    }
   };
 
   const handleUpgradePremium = () => {
