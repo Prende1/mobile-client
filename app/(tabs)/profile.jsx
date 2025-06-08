@@ -17,22 +17,24 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import EditProfileModal from "../../components/EditProfileModal";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import API_ROUTES from "../../api/apiConfig";
+import { loginSuccess } from "../../redux/login/authSlice";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const {user} = useSelector((state) => state.auth);
   const [userProfile, setUserProfile] = useState({
-    name: user?.username || "John Doe",
+    username: user?.username || "John Doe",
     email: user?.email || "F2M5H@example.com",
     phone: user?.phone || "+1 234 567 8900",
     level: user?.level || "Beginner",
-    joinDate: user?.createdTS || "January 2024",
+    createdTS: user?.createdTS || "January 2024",
     wordsLearned: 245,
     streak: 15,
-    isPremium: user?.premium || false,
+    premium: user?.premium || false,
   });
 
   const handleSaveProfile = async (updatedProfile) => {
@@ -42,7 +44,7 @@ export default function ProfileScreen() {
         email: updatedProfile.email,
         phone: updatedProfile.phone,
         level: updatedProfile.level,
-        premium: updatedProfile.isPremium,
+        premium: updatedProfile.premium,
       };
       const res = await fetch(API_ROUTES.updateUser(user._id), {
         method: "POST",
@@ -51,6 +53,7 @@ export default function ProfileScreen() {
         },
         body: JSON.stringify(userData),
       });
+      dispatch(loginSuccess(userData));
       setUserProfile(res.data)
       setEditModalVisible(false);
       Alert.alert("Profile Updated", "Your profile has been successfully updated.");
@@ -127,22 +130,22 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           
-          <Text style={styles.userName}>{userProfile.name}</Text>
+          <Text style={styles.userName}>{userProfile.username}</Text>
           <Text style={styles.userEmail}>{userProfile.email}</Text>
           
           {/* Premium Status */}
-          <View style={[styles.premiumBadge, userProfile.isPremium ? styles.premiumActive : styles.premiumInactive]}>
+          <View style={[styles.premiumBadge, userProfile.premium ? styles.premiumActive : styles.premiumInactive]}>
             <Ionicons 
-              name={userProfile.isPremium ? "diamond" : "diamond-outline"} 
+              name={userProfile.premium ? "diamond" : "diamond-outline"} 
               size={16} 
-              color={userProfile.isPremium ? "#FFD700" : "#666"} 
+              color={userProfile.premium ? "#FFD700" : "#666"} 
             />
-            <Text style={[styles.premiumText, userProfile.isPremium ? styles.premiumTextActive : styles.premiumTextInactive]}>
-              {userProfile.isPremium ? "Premium Member" : "Free Member"}
+            <Text style={[styles.premiumText, userProfile.premium ? styles.premiumTextActive : styles.premiumTextInactive]}>
+              {userProfile.premium ? "Premium Member" : "Free Member"}
             </Text>
           </View>
 
-          {!userProfile.isPremium && (
+          {!userProfile.premium && (
             <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePremium}>
               <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
             </TouchableOpacity>
@@ -187,7 +190,7 @@ export default function ProfileScreen() {
             <ProfileItem
               icon="calendar-outline"
               label="Member Since"
-              value={userProfile.joinDate}
+              value={userProfile.createdTS}
             />
           </View>
         </View>
