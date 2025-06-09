@@ -13,6 +13,7 @@ import {
   loginStart,
   loginSuccess,
   loginFailure,
+  setToken,
 } from "../redux/login/authSlice";
 import API_ROUTES from "../api/apiConfig";
 import { LinearGradient } from "expo-linear-gradient";
@@ -39,6 +40,7 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         dispatch(loginSuccess(data.user));
+        dispatch(setToken(data.token));
         console.log("User logged in:", data.user);
         router.replace("/(tabs)");
       } else {

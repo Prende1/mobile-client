@@ -1,4 +1,5 @@
-const BASE_URL = "https://vocab-server-fkrv.onrender.com/api"; // Change this to your API server URL
+const BASE_URL = "https://vocab-server-fkrv.onrender.com/api"; 
+// const BASE_URL = "https://192.168.1.104:8000/api";
 
 export const API_ROUTES = {
   login: `${BASE_URL}/users`,

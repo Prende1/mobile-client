@@ -1,6 +1,6 @@
 /*
   ProfileScreen.jsx
-  This file is the Profile Screen component.
+  This file is the Profile Screen component with separate useState for each field.
 */
 
 import React, { useState } from "react";
@@ -24,41 +24,75 @@ import { loginSuccess } from "../../redux/login/authSlice";
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { user,token } = useSelector((state) => state.auth);
+  
+  // Separate useState for each field
+  const [username, setUsername] = useState(user?.username || "John Doe");
+  const [email, setEmail] = useState(user?.email || "F2M5H@example.com");
+  const [phone, setPhone] = useState(user?.phone || "+1 234 567 8900");
+  const [level, setLevel] = useState(user?.level || "Beginner");
+  const [createdTS, setCreatedTS] = useState(user?.createdTS || "January 2024");
+  const [wordsLearned, setWordsLearned] = useState(245);
+  const [streak, setStreak] = useState(15);
+  const [premium, setPremium] = useState(user?.premium || false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const {user} = useSelector((state) => state.auth);
-  const [userProfile, setUserProfile] = useState({
-    username: user?.username || "John Doe",
-    email: user?.email || "F2M5H@example.com",
-    phone: user?.phone || "+1 234 567 8900",
-    level: user?.level || "Beginner",
-    createdTS: user?.createdTS || "January 2024",
-    wordsLearned: 245,
-    streak: 15,
-    premium: user?.premium || false,
-  });
+
+  // Create userProfile object for passing to modal and display
+  const userProfile = {
+    username,
+    email,
+    phone,
+    level,
+    createdTS,
+    wordsLearned,
+    streak,
+    premium,
+  };
 
   const handleSaveProfile = async (updatedProfile) => {
-    try{
+    try {
       const userData = {
-        username: updatedProfile.name,
+        username: updatedProfile.username,
         email: updatedProfile.email,
         phone: updatedProfile.phone,
         level: updatedProfile.level,
-        premium: updatedProfile.premium,
       };
+      
       const res = await fetch(API_ROUTES.updateUser(user._id), {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(userData),
       });
-      dispatch(loginSuccess(userData));
-      setUserProfile(res.data)
-      setEditModalVisible(false);
-      Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Update Redux store with new user data
+        dispatch(loginSuccess(data));
+        
+        // Update individual state variables
+        setUsername(data.username || updatedProfile.username);
+        setEmail(data.email || updatedProfile.email);
+        setPhone(data.phone || updatedProfile.phone);
+        setLevel(data.level || updatedProfile.level);
+        
+        // Update other fields if they come from the response
+        if (data.createdTS) setCreatedTS(data.createdTS);
+        if (data.wordsLearned) setWordsLearned(data.wordsLearned);
+        if (data.streak) setStreak(data.streak);
+        if (data.premium !== undefined) setPremium(data.premium);
+        
+        setEditModalVisible(false);
+        Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+      } else {
+        throw new Error(data.message || "Failed to update profile");
+      }
     } catch (error) {
       console.error("Error updating user profile:", error);
+      Alert.alert("Update Failed", "Failed to update profile. Please try again.");
     }
   };
 
@@ -82,7 +116,7 @@ export default function ProfileScreen() {
           <Text style={styles.profileValue}>{value}</Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#666" />
+      {onPress && <Ionicons name="chevron-forward" size={20} color="#666" />}
     </TouchableOpacity>
   );
 
@@ -130,22 +164,22 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           
-          <Text style={styles.userName}>{userProfile.username}</Text>
-          <Text style={styles.userEmail}>{userProfile.email}</Text>
+          <Text style={styles.userName}>{username}</Text>
+          <Text style={styles.userEmail}>{email}</Text>
           
           {/* Premium Status */}
-          <View style={[styles.premiumBadge, userProfile.premium ? styles.premiumActive : styles.premiumInactive]}>
+          <View style={[styles.premiumBadge, premium ? styles.premiumActive : styles.premiumInactive]}>
             <Ionicons 
-              name={userProfile.premium ? "diamond" : "diamond-outline"} 
+              name={premium ? "diamond" : "diamond-outline"} 
               size={16} 
-              color={userProfile.premium ? "#FFD700" : "#666"} 
+              color={premium ? "#FFD700" : "#666"} 
             />
-            <Text style={[styles.premiumText, userProfile.premium ? styles.premiumTextActive : styles.premiumTextInactive]}>
-              {userProfile.premium ? "Premium Member" : "Free Member"}
+            <Text style={[styles.premiumText, premium ? styles.premiumTextActive : styles.premiumTextInactive]}>
+              {premium ? "Premium Member" : "Free Member"}
             </Text>
           </View>
 
-          {!userProfile.premium && (
+          {!premium && (
             <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePremium}>
               <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
             </TouchableOpacity>
@@ -159,13 +193,13 @@ export default function ProfileScreen() {
             <StatCard
               icon="library-outline"
               label="Words Learned"
-              value={userProfile.wordsLearned}
+              value={wordsLearned}
               color="#06B6D4"
             />
             <StatCard
               icon="flame"
               label="Day Streak"
-              value={userProfile.streak}
+              value={streak}
               color="#F59E0B"
             />
           </View>
@@ -176,21 +210,29 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Personal Information</Text>
           <View style={styles.profileDetails}>
             <ProfileItem
+              icon="person-outline"
+              label="Username"
+              value={username}
+            />
+            <ProfileItem
+              icon="mail-outline"
+              label="Email"
+              value={email}
+            />
+            <ProfileItem
               icon="call-outline"
               label="Phone"
-              value={userProfile.phone}
-              onPress={() => console.log("Edit phone")}
+              value={phone || "Not provided"}
             />
             <ProfileItem
               icon="stats-chart-outline"
               label="Level"
-              value={userProfile.level}
-              onPress={() => console.log("Edit location")}
+              value={level}
             />
             <ProfileItem
               icon="calendar-outline"
               label="Member Since"
-              value={userProfile.createdTS}
+              value={createdTS}
             />
           </View>
         </View>
