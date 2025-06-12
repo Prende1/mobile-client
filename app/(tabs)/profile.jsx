@@ -1,6 +1,6 @@
 /*
   ProfileScreen.jsx
-  This file is the Profile Screen component with separate useState for each field.
+  This file is the Profile Screen component with separate useState for each field and image handling.
 */
 
 import React, { useState } from "react";
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
 import EditProfileModal from "../../components/EditProfileModal";
 import { useDispatch, useSelector } from "react-redux";
 import API_ROUTES from "../../api/apiConfig";
@@ -24,7 +25,7 @@ import { loginSuccess } from "../../redux/login/authSlice";
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { user,token } = useSelector((state) => state.auth);
+  const { user, token } = useSelector((state) => state.auth);
   
   // Separate useState for each field
   const [username, setUsername] = useState(user?.username || "John Doe");
@@ -35,7 +36,9 @@ export default function ProfileScreen() {
   const [wordsLearned, setWordsLearned] = useState(245);
   const [streak, setStreak] = useState(15);
   const [premium, setPremium] = useState(user?.premium || false);
+  const [profileImage, setProfileImage] = useState(user?.image || null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   // Create userProfile object for passing to modal and display
   const userProfile = {
@@ -47,49 +50,91 @@ export default function ProfileScreen() {
     wordsLearned,
     streak,
     premium,
+    image: profileImage,
+  };
+
+  // Function to get initials from username
+  const getInitials = (name) => {
+    if (!name) return "JD";
+    const names = name.trim().split(' ');
+    return names.length === 1 ? names[0].substring(0, 2).toUpperCase() : (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  };
+
+  const handleImageSelection = async () => {
+    Alert.alert("Update Profile Picture", "Choose an option", [
+      { text: "Camera", onPress: () => openCamera() },
+      { text: "Gallery", onPress: () => openGallery() },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const openCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Required", "Camera permission is required to take photos.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (!result.canceled) uploadProfileImage(result.assets[0]);
+  };
+
+  const openGallery = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Required", "Gallery permission is required to select photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (!result.canceled) uploadProfileImage(result.assets[0]);
+  };
+
+  const uploadProfileImage = async (imageAsset) => {
+    try {
+      setIsImageUploading(true);
+      const formData = new FormData();
+      formData.append('image', { uri: imageAsset.uri, type: imageAsset.type || 'image/jpeg', name: imageAsset.fileName || 'profile.jpg' });
+      const response = await fetch(API_ROUTES.updateUser(user._id), {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+        body: formData,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        dispatch(loginSuccess(data.user));
+        setProfileImage(data.user.image);
+        Alert.alert("Success", "Profile picture updated successfully!");
+      } else throw new Error(data.message || "Failed to update profile picture");
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      Alert.alert("Upload Failed", "Failed to update profile picture. Please try again.");
+    } finally {
+      setIsImageUploading(false);
+    }
   };
 
   const handleSaveProfile = async (updatedProfile) => {
     try {
-      const userData = {
-        username: updatedProfile.username,
-        email: updatedProfile.email,
-        phone: updatedProfile.phone,
-        level: updatedProfile.level,
-      };
-      
+      const userData = { username: updatedProfile.username, email: updatedProfile.email, phone: updatedProfile.phone, level: updatedProfile.level };
       const res = await fetch(API_ROUTES.updateUser(user._id), {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(userData),
       });
-      
       const data = await res.json();
-      
       if (res.ok) {
-        // Update Redux store with new user data
-        dispatch(loginSuccess(data));
-        
-        // Update individual state variables
-        setUsername(data.username || updatedProfile.username);
-        setEmail(data.email || updatedProfile.email);
-        setPhone(data.phone || updatedProfile.phone);
-        setLevel(data.level || updatedProfile.level);
-        
-        // Update other fields if they come from the response
-        if (data.createdTS) setCreatedTS(data.createdTS);
-        if (data.wordsLearned) setWordsLearned(data.wordsLearned);
-        if (data.streak) setStreak(data.streak);
-        if (data.premium !== undefined) setPremium(data.premium);
-        
+        dispatch(loginSuccess(data.user));
+        setUsername(data.user.username || updatedProfile.username);
+        setEmail(data.user.email || updatedProfile.email);
+        setPhone(data.user.phone || updatedProfile.phone);
+        setLevel(data.user.level || updatedProfile.level);
+        if (data.user.createdTS) setCreatedTS(data.user.createdTS);
+        if (data.user.wordsLearned) setWordsLearned(data.user.wordsLearned);
+        if (data.user.streak) setStreak(data.user.streak);
+        if (data.user.premium !== undefined) setPremium(data.user.premium);
+        if (data.user.image) setProfileImage(data.user.image);
         setEditModalVisible(false);
         Alert.alert("Profile Updated", "Your profile has been successfully updated.");
-      } else {
-        throw new Error(data.message || "Failed to update profile");
-      }
+      } else throw new Error(data.message || "Failed to update profile");
     } catch (error) {
       console.error("Error updating user profile:", error);
       Alert.alert("Update Failed", "Failed to update profile. Please try again.");
@@ -97,15 +142,12 @@ export default function ProfileScreen() {
   };
 
   const handleUpgradePremium = () => {
-    Alert.alert(
-      "Premium Upgrade",
-      "Upgrade to Premium for unlimited access to all features!",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Upgrade", onPress: () => console.log("Navigate to premium") },
-      ]
-    );
+    Alert.alert("Premium Upgrade", "Upgrade to Premium for unlimited access to all features!", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Upgrade", onPress: () => console.log("Navigate to premium") },
+    ]);
   };
+
 
   const ProfileItem = ({ icon, label, value, onPress }) => (
     <TouchableOpacity style={styles.profileItem} onPress={onPress}>
@@ -153,14 +195,27 @@ export default function ProfileScreen() {
         {/* Profile Image and Basic Info */}
         <View style={styles.profileHeader}>
           <View style={styles.profileImageContainer}>
-            <Image
-              source={{
-                uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-              }}
-              style={styles.profileImage}
-            />
-            <TouchableOpacity style={styles.cameraButton}>
-              <Ionicons name="camera" size={16} color="white" />
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>{getInitials(username)}</Text>
+              </View>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.cameraButton} 
+              onPress={handleImageSelection}
+              disabled={isImageUploading}
+            >
+              {isImageUploading ? (
+                <Ionicons name="hourglass" size={16} color="white" />
+              ) : (
+                <Ionicons name="camera" size={16} color="white" />
+              )}
             </TouchableOpacity>
           </View>
           
@@ -316,6 +371,22 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 4,
     borderColor: "#06B6D4",
+  },
+  avatarContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    borderColor: "#06B6D4",
+    backgroundColor: "#475569",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#06B6D4",
+    textAlign: "center",
   },
   cameraButton: {
     position: "absolute",
