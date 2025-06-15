@@ -26,6 +26,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
+  console.log("User in ProfileScreen:", token);
   
   // Separate useState for each field
   const [username, setUsername] = useState(user?.username || "John Doe");
