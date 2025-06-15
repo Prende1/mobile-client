@@ -1,5 +1,5 @@
 const BASE_URL = "https://vocab-server-fkrv.onrender.com/api"; 
-// const BASE_URL = "https://192.168.114.252:8000/api";
+// const BASE_URL = "https://192.168.1.103:8000/api";
 
 export const API_ROUTES = {
   login: `${BASE_URL}/users`,
@@ -12,8 +12,11 @@ export const API_ROUTES = {
   submitQuizResult: `${BASE_URL}/quiz-results`, // Submit quiz result
   getWords: `${BASE_URL}/words`,
   addWord: `${BASE_URL}/words`,
+
+
   getQuestions: (wordId) => `${BASE_URL}/wordQuestion/${wordId}`, // Fetch questions for a specific word
   createWordQuestion: `${BASE_URL}/wordQuestion`, // Create a new word question
+  getWordAnswersByWordID: (wordID) => `${BASE_URL}/wordAnswer/word/${wordID}`, // Fetch answers for a specific word by wordID
   getWordAnswers: (wqID) => `${BASE_URL}/wordAnswer/${wqID}`, // Fetch answers for a specific word question
   createWordAnswer: `${BASE_URL}/wordAnswer`, // Create a new word answer
 };

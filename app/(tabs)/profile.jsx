@@ -40,7 +40,7 @@ export default function ProfileScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
 
-  // Create userProfile object for passing to modal and display
+  // Create userProfile object for 
   const userProfile = {
     username,
     email,
@@ -79,38 +79,56 @@ export default function ProfileScreen() {
   };
 
   const openGallery = async () => {
+    console.log("h01n1");
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       Alert.alert("Permission Required", "Gallery permission is required to select photos.");
       return;
     }
+    console.log("h01n1");
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     if (!result.canceled) uploadProfileImage(result.assets[0]);
   };
-
   const uploadProfileImage = async (imageAsset) => {
-    try {
-      setIsImageUploading(true);
-      const formData = new FormData();
-      formData.append('image', { uri: imageAsset.uri, type: imageAsset.type || 'image/jpeg', name: imageAsset.fileName || 'profile.jpg' });
-      const response = await fetch(API_ROUTES.updateUser(user._id), {
-        method: "PUT",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" },
-        body: formData,
-      });
-      const data = await response.json();
-      if (response.ok) {
-        dispatch(loginSuccess(data.user));
-        setProfileImage(data.user.image);
-        Alert.alert("Success", "Profile picture updated successfully!");
-      } else throw new Error(data.message || "Failed to update profile picture");
-    } catch (error) {
-      console.error("Error uploading profile image:", error);
-      Alert.alert("Upload Failed", "Failed to update profile picture. Please try again.");
-    } finally {
-      setIsImageUploading(false);
+    console.log("h01n");
+  try {
+    
+    setIsImageUploading(true);
+    const formData = new FormData();
+    
+    // Create proper file object for FormData
+    formData.append('image', {
+      uri: imageAsset.uri,
+      type:'image/jpeg',
+      name: imageAsset.fileName || 'profile.jpg'
+    });
+    console.log("khbdjbh")
+    const response = await fetch(API_ROUTES.updateUser(user._id), {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        // DON'T set Content-Type header - let browser set it automatically for FormData
+        // "Content-Type": "multipart/form-data", // ❌ Remove this line
+      },
+      body: formData,
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      dispatch(loginSuccess(data.user));
+      setProfileImage(data.user.image);
+      Alert.alert("Success", "Profile picture updated successfully!");
+    } else {
+      throw new Error(data.message || "Failed to update profile picture");
     }
-  };
+  } catch (error) {
+    console.error("Error uploading profile image:", error);
+    Alert.alert("Upload Failed", "Failed to update profile picture. Please try again.");
+  } finally {
+    setIsImageUploading(false);
+  }
+};
 
   const handleSaveProfile = async (updatedProfile) => {
     try {

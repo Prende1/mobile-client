@@ -20,7 +20,7 @@ import { useRouter } from "expo-router";
 import { Picker } from "@react-native-picker/picker";
 import API_ROUTES from "../../api/apiConfig";
 import { useDispatch } from "react-redux";
-import { setCurrentWordId } from "@/redux/word/word";
+import { setCurrentWord, setCurrentWordId } from "@/redux/word/word";
 
 export default function WordScreen() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,9 +90,10 @@ export default function WordScreen() {
     }
   };
 
-  const handleWord = (id) => {
+  const handleWord = (id,title) => {
     dispatch(setCurrentWordId(id));
-    router.push("WordQuestions");
+    dispatch(setCurrentWord(title))
+    router.push("QuestionAndAnswer");
   }
 
   return (
@@ -150,7 +151,7 @@ export default function WordScreen() {
           }
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.wordCard} onPress={() => handleWord(item._id)}>
+            <TouchableOpacity style={styles.wordCard} onPress={() => handleWord(item._id,item.title)}>
               <View>
                 <Text style={styles.wordText}>{item.title}</Text>
                 <Text style={styles.wordType}>({item.category})</Text>
