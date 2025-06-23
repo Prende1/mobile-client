@@ -15,7 +15,7 @@ import AddAnswerModal from "../components/Words/AddAnswerModal";
 
 const WordAnswers = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
-  const { currentQuestionId } = useSelector((state) => state.word);
+  const { currentQuestionId,currentWord } = useSelector((state) => state.word);
   const { username: currentUsername } = useSelector((state) => state.auth.user);
   
   console.log("Current Question ID:", currentQuestionId);
@@ -124,7 +124,7 @@ const WordAnswers = () => {
 
       <ScrollView style={styles.content}>
         {/* Title */}
-        <Text style={styles.title}>Define accountable</Text>
+        <Text style={styles.title}>{currentWord}</Text>
 
         {/* Add Answer Button */}
         <TouchableOpacity style={styles.addButton} onPress={handleAddAnswer}>

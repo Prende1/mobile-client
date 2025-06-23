@@ -11,20 +11,22 @@ import {
   StatusBar,
   SafeAreaView,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import API_ROUTES from "../api/apiConfig";
+import { setCurrentQuestionId } from "@/redux/word/word";
 
 const AccordionItem = ({
   title,
   createdBy,
   reviewedBy,
-  allAnswers,
+  topAnswer,
   isExpanded,
   onToggle,
   commentCount,
   likeCount,
   hasAnswers,
   answerCount,
+  onQuestionPress,
 }) => (
   <View style={styles.accordionContainer}>
     <TouchableOpacity
@@ -39,7 +41,9 @@ const AccordionItem = ({
           color="#666"
         />
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
+          <TouchableOpacity onPress={onQuestionPress} style={styles.questionButton}>
+            <Text style={styles.title}>{title}</Text>
+          </TouchableOpacity>
           <View style={styles.authorContainer}>
             <Text style={styles.createdBy}>Created by {createdBy}</Text>
             {reviewedBy && (
@@ -56,46 +60,53 @@ const AccordionItem = ({
 
     {isExpanded && (
       <View style={styles.accordionContent}>
-        {hasAnswers ? (
+        {hasAnswers && topAnswer ? (
           <View style={styles.answersContainer}>
-            <Text style={styles.answersTitle}>Answers:</Text>
-            {allAnswers.map((answer, index) => (
-              <View key={answer._id} style={styles.answerItem}>
-                <View style={styles.answerHeader}>
-                  <View style={styles.answerRank}>
-                    <Text style={styles.rankNumber}>#{index + 1}</Text>
-                    <View style={styles.scoreContainer}>
-                      <Ionicons name="star" size={12} color="#F59E0B" />
-                      <Text style={styles.scoreText}>{answer.ai_score}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.answerMeta}>
-                    <Text style={styles.answeredBy}>by {answer.answered_by}</Text>
-                    <Text style={styles.narrative}>({answer.narrative})</Text>
+            <View style={styles.topAnswerHeader}>
+              <Text style={styles.answersTitle}>Top Answer:</Text>
+              {answerCount > 1 && (
+                <TouchableOpacity style={styles.viewAllButton} onPress={onQuestionPress}>
+                  <Text style={styles.viewAllText}>View all {answerCount} answers</Text>
+                  <Ionicons name="arrow-forward" size={12} color="#06B6D4" />
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            <View style={styles.answerItem}>
+              <View style={styles.answerHeader}>
+                <View style={styles.answerRank}>
+                  <Text style={styles.rankNumber}>#1</Text>
+                  <View style={styles.scoreContainer}>
+                    <Ionicons name="star" size={12} color="#F59E0B" />
+                    <Text style={styles.scoreText}>{topAnswer.ai_score}</Text>
                   </View>
                 </View>
-                
-                <Text style={styles.answerText}>{answer.answer}</Text>
-                
-                <View style={styles.answerFooter}>
-                  <Text style={styles.answerDate}>
-                    {new Date(answer.created_ts).toLocaleDateString()}
-                  </Text>
-                  <View style={styles.answerActions}>
-                    <TouchableOpacity style={styles.answerActionButton}>
-                      <Ionicons name="thumbs-up-outline" size={14} color="#666" />
-                      <Text style={styles.answerActionText}>{answer.num_vote}</Text>
-                    </TouchableOpacity>
-                    {answer.flag && (
-                      <View style={styles.flagContainer}>
-                        <Ionicons name="flag" size={12} color="#EF4444" />
-                        <Text style={styles.flagText}>Flagged</Text>
-                      </View>
-                    )}
-                  </View>
+                <View style={styles.answerMeta}>
+                  <Text style={styles.answeredBy}>by {topAnswer.answered_by}</Text>
+                  <Text style={styles.narrative}>({topAnswer.narrative})</Text>
                 </View>
               </View>
-            ))}
+              
+              <Text style={styles.answerText}>{topAnswer.answer}</Text>
+              
+              <View style={styles.answerFooter}>
+                <Text style={styles.answerDate}>
+                  {new Date(topAnswer.created_ts).toLocaleDateString()}
+                </Text>
+                <View style={styles.answerActions}>
+                  <TouchableOpacity style={styles.answerActionButton}>
+                    <Ionicons name="thumbs-up-outline" size={14} color="#666" />
+                    <Text style={styles.answerActionText}>{topAnswer.num_vote}</Text>
+                  </TouchableOpacity>
+                  {topAnswer.flag && (
+                    <View style={styles.flagContainer}>
+                      <Ionicons name="flag" size={12} color="#EF4444" />
+                      <Text style={styles.flagText}>Flagged</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
           </View>
         ) : (
           <View style={styles.noAnswerContainer}>
@@ -139,6 +150,7 @@ export default function QuestionAndAnswer() {
   const [mappedData, setMappedData] = useState([]);
   const {currentWordId,currentWord} = useSelector((state) => state.word);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const getQuestionList = async () => {
       try {
@@ -215,7 +227,7 @@ export default function QuestionAndAnswer() {
           likeCount: question.num_vote || 0,
           hasAnswers: sortedAnswers.length > 0,
           answerCount: sortedAnswers.length,
-          allAnswers: sortedAnswers, // Store all sorted answers
+          topAnswer: sortedAnswers.length > 0 ? sortedAnswers[0] : null, // Only store the top answer
         };
       });
 
@@ -247,18 +259,20 @@ export default function QuestionAndAnswer() {
     setExpandedItems(newExpanded);
   };
 
+  const handleQuestionPress = (questionId) => {
+      dispatch(setCurrentQuestionId(questionId));
+      router.push("WordAnswers");
+    };
+
   const mainFilters = ["Definition", "Children Definition", "Primary Def"];
-  const subFilters = ["Questions", "Definition", "Examples"];
 
   const handleMainFilterPress = (filter) => {
     setSelectedMainFilter(filter);
   };
 
-  const handleSubFilterPress = (filter) => {
-    if(filter==="Questions" ) {
-      router.push("WordQuestions");
-    }
-    setSelectedSubFilter(filter);
+  // Separate handler for Questions button
+  const handleQuestionsPress = () => {
+    router.push("WordQuestions");
   };
 
   return (
@@ -305,32 +319,16 @@ export default function QuestionAndAnswer() {
           ))}
         </ScrollView>
 
-        {/* Sub Filter Buttons */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.subFilterScroll}
-        >
-          {subFilters.map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              onPress={() => handleSubFilterPress(filter)}
-              style={[
-                styles.subFilterButton,
-                selectedSubFilter === filter && styles.subFilterButtonActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.subFilterButtonText,
-                  selectedSubFilter === filter && styles.subFilterButtonTextActive,
-                ]}
-              >
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Sub Filter Section with Questions Button */}
+        <View style={styles.subFilterContainer}>
+          <TouchableOpacity
+            style={styles.questionsButton}
+            onPress={handleQuestionsPress}
+          >
+            <Ionicons name="add-circle-outline" size={16} color="#06B6D4" />
+            <Text style={styles.questionsButtonText}>Go to Questions</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Accordion Content */}
@@ -350,9 +348,10 @@ export default function QuestionAndAnswer() {
                 title={item.title}
                 createdBy={item.createdBy}
                 reviewedBy={item.reviewedBy}
-                allAnswers={item.allAnswers}
+                topAnswer={item.topAnswer}
                 isExpanded={expandedItems.has(item.id)}
                 onToggle={() => toggleItem(item.id)}
+                onQuestionPress={() => handleQuestionPress(item.id)}
                 commentCount={item.commentCount}
                 likeCount={item.likeCount}
                 hasAnswers={item.hasAnswers}
@@ -424,27 +423,25 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: "white",
   },
-  subFilterScroll: {
+  subFilterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 4,
   },
-  subFilterButton: {
-    backgroundColor: "#334155",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    marginRight: 8,
+  questionsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E40AF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginRight: 12,
   },
-  subFilterButtonActive: {
-    backgroundColor: "#475569",
-  },
-  subFilterButtonText: {
-    color: "#94a3b8",
-    fontSize: 12,
-    fontWeight: "400",
-  },
-  subFilterButtonTextActive: {
-    color: "#e2e8f0",
-    fontWeight: "500",
+  questionsButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 4,
   },
   scrollContainer: {
     flex: 1,
@@ -480,11 +477,15 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
+  questionButton: {
+    marginBottom: 4,
+  },
   title: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1E293B",
+    color: "#000000", // Changed to make it look like a button/link
     marginBottom: 4,
+    textDecorationLine: "underline", // Added underline to indicate it's interactive
   },
   authorContainer: {
     flexDirection: "row",
@@ -515,17 +516,35 @@ const styles = StyleSheet.create({
   answersContainer: {
     marginTop: 12,
   },
+  topAnswerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   answersTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1E293B",
-    marginBottom: 12,
+  },
+  viewAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 4,
+  },
+  viewAllText: {
+    fontSize: 12,
+    color: "#06B6D4",
+    fontWeight: "500",
+    marginRight: 4,
   },
   answerItem: {
     backgroundColor: "#F8FAFC",
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
     borderLeftWidth: 3,
     borderLeftColor: "#06B6D4",
   },
