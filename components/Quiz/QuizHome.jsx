@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
+import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import AIBanner from "./AIBanner";
 import QuizCard from "./QuizCard";
 import { setQuiz } from "@/redux/quiz/quiz";
 import { useDispatch, useSelector } from "react-redux";
 import API_ROUTES from "@/api/apiConfig";
+import { useRouter } from "expo-router";
 
 const QuizHome = () => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const {quiz} = useSelector((state) => state.quiz);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -45,6 +47,15 @@ const QuizHome = () => {
           </View>
         )}
       </View>
+      <TouchableOpacity
+          style={{ marginTop: 160, alignItems: "center" }}
+          onPress={() => {
+            // Handle the action for "See All" button
+            router.push("PastQuizQuestions");
+          }}
+        >
+          <Text style={{ color: "#1E1E1E", fontSize: 26 }}>Past Quiz Questions</Text>
+        </TouchableOpacity>
     </View>
   );
 };

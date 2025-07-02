@@ -26,6 +26,7 @@ export default function RootLayout() {
 
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    lexend: require("../assets/fonts/Lexend-VariableFont_wght.ttf"),
   });
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "StartPage", "Onboarding","WordQuestions","WordAnswers","QuestionAndAnswer"].includes(
+  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "PastQuizQuestions","StartPage", "Onboarding","WordQuestions","WordAnswers","QuestionAndAnswer"].includes(
   segments[0]
 ) && segments[1] !== "wordScreen" && segments[1] !== "profile";
 
@@ -71,6 +72,7 @@ export default function RootLayout() {
               <Stack.Screen name="QuestionAndAnswer" />
               <Stack.Screen name="WordQuestions" />
               <Stack.Screen name="WordAnswers" />
+              <Stack.Screen name="PastQuizQuestions" />
             </Stack>
           </View>
 

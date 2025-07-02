@@ -75,13 +75,50 @@ const WordQuestions = () => {
     return identifier;
   };
 
+  const handleVote = async (questionId,like) => {
+    try {
+      const response = await fetch(API_ROUTES.likeQuestionOrAnswer, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questionID : questionId,
+          username : currentUsername,
+          like : like
+        }),
+      });
+  
+      const result = await response.json();
+      console.log("fuyyu",result);
+          if (!response.ok) {
+        if (response.status === 400 && result.error?.includes("already liked")) {
+          // Show popup or toast notification
+          alert("You have already liked this answer.");
+        } else if (response.status === 400 && result.error?.includes("already disliked")) {
+          alert("You have already disliked this answer.");
+        } else {
+          alert(`Error: ${result.error}`);
+        }
+      } else {
+        // Success
+        console.log("Vote result:", result);
+        // Optionally update UI or state here
+      }
+      getQuestionList(); // Refresh the questions list after voting
+    } catch (error) {
+      console.error("Error during voting:", error);
+    }
+  };
+
   // Map API data to display format - only if questions is an array
   const mappedQuestions = questions.length > 0 ? questions.map((q, index) => ({
     id: q._id,
     title: q.question,
     creator: q.created_by,
     reviewer: getDisplayName(q.reviewed_by),
-    likes: q.num_vote || 0,
+    likes: q.likes || 0,
+    dislikes : q.dislikes || 0,
     comments: q.num_ans || 0,
     createdDate: new Date(q.created_ts).toLocaleDateString(),
     updatedDate: new Date(q.updated_ts).toLocaleDateString(),
@@ -236,10 +273,14 @@ const WordQuestions = () => {
                     <View style={styles.questionRight}>
                       <Ionicons name="chevron-forward" size={22} color="#333" />
                       <View style={styles.statsContainer}>
-                        <View style={styles.statItem}>
+                        <TouchableOpacity style={styles.statItem} onPress={() => handleVote(question.id, true)}>
                           <Ionicons name="thumbs-up" size={20} color="#6b7280" />
                           <Text style={styles.statText}>{question.likes}</Text>
-                        </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.statItem} onPress={() => handleVote(question.id, false)}>
+                          <Ionicons name="thumbs-down" size={20} color="#6b7280" />
+                          <Text style={styles.statText}>{question.dislikes}</Text>
+                        </TouchableOpacity>
                         {/* <View style={styles.statItem}>
                           <Text style={styles.statIcon}>💬</Text>
                           <Text style={styles.statText}>{question.comments}</Text>

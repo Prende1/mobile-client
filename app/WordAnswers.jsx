@@ -16,7 +16,7 @@ import AddAnswerModal from "../components/Words/AddAnswerModal";
 const WordAnswers = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const { currentQuestionId,currentWord } = useSelector((state) => state.word);
-  const { username: currentUsername } = useSelector((state) => state.auth.user);
+  const { username: currentUsername, userId} = useSelector((state) => state.auth.user);
   
   console.log("Current Question ID:", currentQuestionId);
   console.log("Current Username:", currentUsername);
@@ -96,10 +96,41 @@ const WordAnswers = () => {
     setSelectedFilter(filter);
   };
 
-  const handleVote = (answerId, isUpvote) => {
-    // Handle voting logic here
-    console.log(`${isUpvote ? "Upvote" : "Downvote"} answer ${answerId}`);
-  };
+  const handleVote = async (answerId) => {
+  try {
+    const response = await fetch(API_ROUTES.likeQuestionOrAnswer, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        answerID : answerId,
+        username : currentUsername,
+        like : true
+      }),
+    });
+
+    const result = await response.json();
+    console.log("fuyyu",result);
+        if (!response.ok) {
+      if (response.status === 400 && result.error?.includes("already liked")) {
+        // Show popup or toast notification
+        alert("You have already liked this answer.");
+      } else if (response.status === 400 && result.error?.includes("already disliked")) {
+        alert("You have already disliked this answer.");
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } else {
+      // Success
+      console.log("Vote result:", result);
+      // Optionally update UI or state here
+    }
+  } catch (error) {
+    console.error("Error during voting:", error);
+  }
+};
+
 
   const handleAddAnswer = () => {
     setShowAddAnswerModal(true);
@@ -242,7 +273,7 @@ const WordAnswers = () => {
                 <View style={styles.rightFooter}>
                   <TouchableOpacity
                     style={styles.voteButton}
-                    onPress={() => handleVote(answer._id, true)}
+                    onPress={() => handleVote(answer._id)}
                   >
                     <Ionicons
                       name="chevron-up"
@@ -250,13 +281,14 @@ const WordAnswers = () => {
                       color={answer.isUpvoted ? "#06B6D4" : "#6b7280"}
                     />
                   </TouchableOpacity>
-                  <Text style={styles.voteCount}>{answer.num_vote || 0}</Text>
+                  <Text style={styles.voteCount}>{answer.likes || 0}</Text>
                   <TouchableOpacity
                     style={styles.voteButton}
-                    onPress={() => handleVote(answer._id, false)}
+                    onPress={() => handleVote(answer._id)}
                   >
                     <Ionicons name="chevron-down" size={20} color="#6b7280" />
                   </TouchableOpacity>
+                   <Text style={styles.voteCount}>{answer.dislikes || 0}</Text>
                 </View>
               </View>
 

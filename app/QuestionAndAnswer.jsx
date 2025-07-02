@@ -16,17 +16,19 @@ import API_ROUTES from "../api/apiConfig";
 import { setCurrentQuestionId } from "@/redux/word/word";
 
 const AccordionItem = ({
+  questionId,
   title,
   createdBy,
   reviewedBy,
   topAnswer,
   isExpanded,
   onToggle,
-  commentCount,
+  dislikeCount,
   likeCount,
   hasAnswers,
   answerCount,
   onQuestionPress,
+  handleVote
 }) => (
   <View style={styles.accordionContainer}>
     <TouchableOpacity
@@ -94,9 +96,9 @@ const AccordionItem = ({
                   {new Date(topAnswer.created_ts).toLocaleDateString()}
                 </Text>
                 <View style={styles.answerActions}>
-                  <TouchableOpacity style={styles.answerActionButton}>
+                  <TouchableOpacity style={styles.answerActionButton} onPress={() => handleVote(topAnswer._id, true,"answer")}>
                     <Ionicons name="thumbs-up-outline" size={14} color="#666" />
-                    <Text style={styles.answerActionText}>{topAnswer.num_vote}</Text>
+                    <Text style={styles.answerActionText}>{topAnswer.likes}</Text>
                   </TouchableOpacity>
                   {topAnswer.flag && (
                     <View style={styles.flagContainer}>
@@ -122,18 +124,15 @@ const AccordionItem = ({
 
         <View style={styles.actionContainer}>
           <View style={styles.actionLeft}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="chatbubble-outline" size={16} color="#666" />
-              <Text style={styles.actionText}>{commentCount || 0}</Text>
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleVote(questionId, false,"question")}>
+              <Ionicons name="thumbs-down-outline" size={16} color="#666" />
+              <Text style={styles.actionText}>{dislikeCount || 0}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleVote(questionId, true,"question")}>
               <Ionicons name="thumbs-up-outline" size={16} color="#666" />
               <Text style={styles.actionText}>{likeCount || 0}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="chevron-down" size={16} color="#666" />
-          </TouchableOpacity>
         </View>
       </View>
     )}
@@ -149,6 +148,7 @@ export default function QuestionAndAnswer() {
   const [answers, setAnswers] = useState([]);
   const [mappedData, setMappedData] = useState([]);
   const {currentWordId,currentWord} = useSelector((state) => state.word);
+  const { username: currentUsername } = useSelector((state) => state.auth.user);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -204,6 +204,50 @@ export default function QuestionAndAnswer() {
       }
     };
 
+    const handleVote = async (answerId,like,type) => {
+      try {
+        const response = await fetch(API_ROUTES.likeQuestionOrAnswer, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...(type === "answer"
+              ? { answerID: answerId }
+              : { questionID: answerId }),
+            username: currentUsername,
+            like: like
+          }),
+        });
+    
+        const result = await response.json();
+        console.log("fuyyu",result);
+            if (!response.ok) {
+          if (response.status === 400 && result.error?.includes("already liked")) {
+            // Show popup or toast notification
+            alert("You have already liked this answer.");
+          } else if (response.status === 400 && result.error?.includes("already disliked")) {
+            alert("You have already disliked this answer.");
+          } else {
+            alert(`Error: ${result.error}`);
+          }
+        } else {
+          // Success
+          console.log("Vote result:", result);
+          // Optionally update UI or state here
+        }
+        if(type==="answer"){
+          // Refresh answers list after voting
+          getAnswersList();
+        }else{
+          // Refresh questions list after voting
+          getQuestionList();
+        }
+      } catch (error) {
+        console.error("Error during voting:", error);
+      }
+    };
+
     // Map questions with their corresponding answers
     const mapQuestionsWithAnswers = () => {
       const mapped = questions.map(question => {
@@ -224,7 +268,8 @@ export default function QuestionAndAnswer() {
           createdBy: question.created_by,
           reviewedBy: question.reviewed_by,
           commentCount: 0, // Add if you have comment data
-          likeCount: question.num_vote || 0,
+          likeCount: question.likes || 0,
+          dislikeCount: question.dislikes || 0,
           hasAnswers: sortedAnswers.length > 0,
           answerCount: sortedAnswers.length,
           topAnswer: sortedAnswers.length > 0 ? sortedAnswers[0] : null, // Only store the top answer
@@ -345,17 +390,20 @@ export default function QuestionAndAnswer() {
             mappedData.map((item) => (
               <AccordionItem
                 key={item.id}
+                questionId={item.id}
                 title={item.title}
                 createdBy={item.createdBy}
                 reviewedBy={item.reviewedBy}
                 topAnswer={item.topAnswer}
+                answerId={item.answerId}
                 isExpanded={expandedItems.has(item.id)}
                 onToggle={() => toggleItem(item.id)}
                 onQuestionPress={() => handleQuestionPress(item.id)}
-                commentCount={item.commentCount}
+                dislikeCount={item.dislikeCount}
                 likeCount={item.likeCount}
                 hasAnswers={item.hasAnswers}
                 answerCount={item.answerCount}
+                handleVote={handleVote}
               />
             ))
           ) : (
