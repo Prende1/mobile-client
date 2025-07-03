@@ -27,6 +27,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     lexend: require("../assets/fonts/Lexend-VariableFont_wght.ttf"),
+    lexend_med : require("../assets/fonts/Lexend-Medium.ttf"),
   });
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} >
           <LinearGradient
             colors={["#1C1E46", "#131425"]}
             style={styles.gradientBackground}

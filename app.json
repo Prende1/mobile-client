@@ -33,6 +33,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Lexend-VariableFont_wght.ttf","./assets/fonts/Lexend-Medium.ttf"]
+        }
       ]
     ],
     "experiments": {
