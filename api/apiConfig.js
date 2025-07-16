@@ -5,8 +5,8 @@ export const API_ROUTES = {
   login: `${BASE_URL}/users`,
   getUserById: (id) => `${BASE_URL}/users/${id}`, // Fetch user by ID
   updateUser: (id) => `${BASE_URL}/users/${id}`, // Update user profile
-  QUIZZES: `${BASE_URL}/quizzes`, // Fetch all quizzes
-  getQuizById : (id) => `${BASE_URL}/getQuiz/${id}/questions`,
+  startQuizSession: `${BASE_URL}/start-quiz`, // Fetch all quizzes
+  getNextQuestion: (quizId) => `${BASE_URL}/next-question/${quizId}`, // Fetch next question in a quiz
   QUIZ_BY_ID: (id) => `${BASE_URL}/quiz/${id}`, // Fetch a single quiz by ID
   submitAnswer: `${BASE_URL}/responses`, // Submit a quiz answer
   submitQuizResult: `${BASE_URL}/quiz-results`, // Submit quiz result

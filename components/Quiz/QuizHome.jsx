@@ -8,33 +8,33 @@ import API_ROUTES from "@/api/apiConfig";
 import { useRouter } from "expo-router";
 
 const QuizHome = () => {
-  const [loading, setLoading] = useState(true);
-  const dispatch = useDispatch();
-  const {quiz} = useSelector((state) => state.quiz);
+  // const [loading, setLoading] = useState(true);
+  // const dispatch = useDispatch();
+  // const {quiz} = useSelector((state) => state.quiz);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchQuizzes = async () => {
-      try {
-        const response = await fetch(API_ROUTES.QUIZZES); // Replace with local IP
-        const data = await response.json();
-        //console.log("Fetched Quizzes:", data);
-        dispatch(setQuiz(data));
-        // console.log(quiz);
-      } catch (error) {
-        console.error("Error fetching quizzes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchQuizzes = async () => {
+  //     try {
+  //       const response = await fetch(API_ROUTES.QUIZZES); // Replace with local IP
+  //       const data = await response.json();
+  //       //console.log("Fetched Quizzes:", data);
+  //       dispatch(setQuiz(data));
+  //       // console.log(quiz);
+  //     } catch (error) {
+  //       console.error("Error fetching quizzes:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchQuizzes();
-  }, []);
+  //   fetchQuizzes();
+  // }, []);
 
   return (
     <View style={styles.container}>
       <AIBanner />
-      <View style={styles.quizContainer}>
+      {/* <View style={styles.quizContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#1E1E1E" />
         ) : quiz.length === 0 ? (
@@ -46,7 +46,7 @@ const QuizHome = () => {
             ))}
           </View>
         )}
-      </View>
+      </View> */}
       <TouchableOpacity
           style={{ marginTop: 160, alignItems: "center" }}
           onPress={() => {

@@ -36,8 +36,9 @@ const Login = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+      console.log("Response status:", response.status);
       if (response.ok) {
+        console.log("Login successful");
         const data = await response.json();
         dispatch(loginSuccess(data.user));
         dispatch(setToken(data.token));

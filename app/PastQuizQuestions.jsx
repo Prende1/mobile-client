@@ -7,12 +7,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import API_ROUTES from "../api/apiConfig";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { setCurrentQuizId , setQuiz } from "@/redux/quiz/quiz";
+import QuizStartScreen from "../components/Quiz/StartCard";
 
 const PastQuizQuestions = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +24,9 @@ const PastQuizQuestions = () => {
   const [loading, setLoading] = useState(false);
   const userId = useSelector((state) => state.auth.user?._id);
   const router = useRouter();
+  const dispatch = useDispatch();
+  const [modalVisible, setModalVisible] = useState(false);
+  
   console.log("User ID:", userId);
 
   const getQuestionList = async () => {
@@ -54,6 +61,43 @@ const PastQuizQuestions = () => {
       getQuestionList();
     }
   }, [userId]);
+
+  const handleModal = () => {
+    setModalVisible(!modalVisible);
+  };
+
+  const handleStartQuiz = async (difficulty) => {
+    console.log("Selected difficulty:", difficulty);
+    setModalVisible(false);
+    
+    try {
+      setLoading(true);
+      const response = await fetch(API_ROUTES.startQuizSession, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, difficulty }),
+      });
+      
+      const data = await response.json();
+      console.log("Start Quiz Response:", data);
+      
+      // Assuming the response contains a quiz ID
+      if (data.quizId || data._id) {
+        const quizId = data.quizId || data._id;
+        dispatch(setCurrentQuizId(quizId));
+        dispatch(setQuiz(data))
+        router.push("QuizScreen");
+      } else {
+        console.error("No quiz ID returned from API");
+      }
+    } catch (error) {
+      console.error("Error starting quiz:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter questions based on search query
   const filteredQuestions = recentQuestions.filter((item) =>
@@ -123,62 +167,90 @@ const PastQuizQuestions = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={28} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Past Quiz Questions</Text>
-        <TouchableOpacity onPress={getQuestionList} disabled={loading}>
-          <Icon name="refresh" size={24} color={loading ? "#ccc" : "#666"} />
-        </TouchableOpacity>
-      </View>
+    <>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={28} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Past Quiz Questions</Text>
+          <TouchableOpacity onPress={getQuestionList} disabled={loading}>
+            <Icon name="refresh" size={24} color={loading ? "#ccc" : "#666"} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Icon
-            name="search"
-            size={20}
-            color="#999"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search questions"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#999"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery("")}
-              style={styles.clearButton}
-            >
-              <Icon name="clear" size={20} color="#999" />
-            </TouchableOpacity>
-          )}
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Icon
+              name="search"
+              size={20}
+              color="#999"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search questions"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#999"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
+                <Icon name="clear" size={20} color="#999" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Results Count */}
+        {!loading && recentQuestions.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsText}>
+              {searchQuery.length > 0
+                ? `${filteredQuestions.length} of ${recentQuestions.length} questions`
+                : `${recentQuestions.length} total questions`}
+            </Text>
+          </View>
+        )}
+
+        {/* Content */}
+        {renderContent()}
+        
+        <View style={styles.bottomContainer}>
+          <TouchableOpacity
+            style={styles.startAnsweringButton}
+            onPress={handleModal}
+          >
+            <Text style={styles.startAnsweringButtonText}>Start Answering</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      {/* Results Count */}
-      {!loading && recentQuestions.length > 0 && (
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsText}>
-            {searchQuery.length > 0
-              ? `${filteredQuestions.length} of ${recentQuestions.length} questions`
-              : `${recentQuestions.length} total questions`}
-          </Text>
+      
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <QuizStartScreen
+              onStartQuiz={handleStartQuiz}
+              title="New Quiz"
+              onClose={handleModal}
+            />
+          </View>
         </View>
-      )}
-
-      {/* Content */}
-      {renderContent()}
-    </View>
+      </Modal>
+    </>
   );
 };
 
@@ -209,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
-    fontFamily: "Lexend"
+    fontFamily: "Lexend",
   },
   searchInputContainer: {
     flexDirection: "row",
@@ -282,6 +354,35 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     fontWeight: "600",
     marginBottom: 4,
+  },
+  bottomContainer: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#e9ecef",
+  },
+  startAnsweringButton: {
+    backgroundColor: "#20c997",
+    paddingVertical: 14,
+    borderRadius: 25,
+    alignItems: "center",
+  },
+  startAnsweringButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Lexend",
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "85%",
+    backgroundColor: "transparent",
   },
   loadingContainer: {
     flex: 1,

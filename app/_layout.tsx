@@ -27,7 +27,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     lexend: require("../assets/fonts/Lexend-VariableFont_wght.ttf"),
-    lexend_med : require("../assets/fonts/Lexend-Medium.ttf"),
+    lexend_med: require("../assets/fonts/Lexend-Medium.ttf"),
   });
 
   useEffect(() => {
@@ -41,14 +41,26 @@ export default function RootLayout() {
   }
 
   // Hide Navbar & Footer on Login and index (authentication screens)
-  const shouldShowNavAndFooter = !["LevelPage", "Login", "index", "PastQuizQuestions","StartPage", "Onboarding","WordQuestions","WordAnswers","QuestionAndAnswer"].includes(
-  segments[0]
-) && segments[1] !== "wordScreen" && segments[1] !== "profile";
+  const shouldShowNavAndFooter =
+    ![
+      "LevelPage",
+      "Login",
+      "index",
+      "PastQuizQuestions",
+      "StartPage",
+      "Onboarding",
+      "WordQuestions",
+      "WordAnswers",
+      "QuestionAndAnswer",
+      "QuizResult",
+    ].includes(segments[0]) &&
+    segments[1] !== "wordScreen" &&
+    segments[1] !== "profile";
 
   return (
     <Provider store={store}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <SafeAreaView style={styles.safeArea} >
+        <SafeAreaView style={styles.safeArea}>
           <LinearGradient
             colors={["#1C1E46", "#131425"]}
             style={styles.gradientBackground}
@@ -74,6 +86,7 @@ export default function RootLayout() {
               <Stack.Screen name="WordQuestions" />
               <Stack.Screen name="WordAnswers" />
               <Stack.Screen name="PastQuizQuestions" />
+              <Stack.Screen name="QuizResult" />
             </Stack>
           </View>
 
