@@ -172,7 +172,7 @@ const TabBarBackground = () => {
         position: "absolute",
         bottom: 0,
         width: "100%",
-        height: 80,
+        height: 70,
         backgroundColor: "#FFFFFF",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -2 },
@@ -252,12 +252,12 @@ export default function TabLayout() {
           position: "absolute",
           backgroundColor: "transparent",
           borderTopWidth: 0,
-          height: 80,
+          height: 70,
           bottom: 0,
           width: "100%",
           elevation: 0,
           paddingBottom: 5,
-          paddingTop: 20,
+          paddingTop: 15,
         },
         tabBarLabelStyle: {
           display: "none", // Hide default labels since we're using custom ones
@@ -306,14 +306,14 @@ export default function TabLayout() {
               focused={focused} 
               iconName="help-circle-outline"
               iconNameFocused="help-circle"
-              label="Quizzes"
+              label="Profile"
             />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="questions"
+        name="wordQuestions"
         options={{
           title: "",
           tabBarIcon: ({ color, focused }) => (

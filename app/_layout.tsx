@@ -55,6 +55,7 @@ export default function RootLayout() {
       "QuizResult",
     ].includes(segments[0]) &&
     segments[1] !== "wordScreen" &&
+    segments[1] !== "wordQuestions" &&
     segments[1] !== "profile";
 
   return (
@@ -87,6 +88,7 @@ export default function RootLayout() {
               <Stack.Screen name="WordAnswers" />
               <Stack.Screen name="PastQuizQuestions" />
               <Stack.Screen name="QuizResult" />
+              <Stack.Screen name="WordAnswering" />
             </Stack>
           </View>
 
