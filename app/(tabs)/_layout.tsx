@@ -304,8 +304,8 @@ export default function TabLayout() {
             <CustomTab 
               color={color} 
               focused={focused} 
-              iconName="help-circle-outline"
-              iconNameFocused="help-circle"
+              iconName="person-outline"
+              iconNameFocused="person"
               label="Profile"
             />
           ),
@@ -323,6 +323,21 @@ export default function TabLayout() {
               iconName="chatbubble-ellipses-outline"
               iconNameFocused="chatbubble-ellipses"
               label="Questions"
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="quizzes"
+        options={{
+          title: "",
+          tabBarIcon: ({ color, focused }) => (
+            <CustomTab 
+              color={color} 
+              focused={focused} 
+              iconName="help-circle-outline"
+              iconNameFocused="help-circle"
+              label="Quizzes"
             />
           ),
         }}
