@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import API_ROUTES from "../api/apiConfig"; // Adjust the import path as necessary
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -140,7 +141,7 @@ const QuestionsScreen = () => {
   }, []);
 
   const handleBack = () => {
-    console.log("Back button pressed");
+    // console.log("Back button pressed");
     router.back(); // Use router.back() for navigation
   };
 
@@ -153,7 +154,7 @@ const QuestionsScreen = () => {
     if (loadingAnswers) {
       return (
         <View style={styles.answersLoadingContainer}>
-          <ActivityIndicator size="small" color="#7dd3c0" />
+          <ActivityIndicator size="small" color="#06B6D4" />
           <Text style={styles.loadingText}>Loading answers...</Text>
         </View>
       );
@@ -170,8 +171,12 @@ const QuestionsScreen = () => {
           answers.map((answerItem, index) => (
             <View key={index} style={styles.answerItem}>
               <View style={styles.answerHeader}>
-                <Text style={styles.answerAuthor}>
+                <Text style={[
+                  styles.answerAuthor,
+                  answerItem.answered_by === currentUsername && styles.currentUserAnswer
+                ]}>
                   {answerItem.answered_by || 'Anonymous'}
+                  {answerItem.answered_by === currentUsername && ' (You)'}
                 </Text>
                 {answerItem.createdAt && (
                   <Text style={styles.answerDate}>
@@ -199,36 +204,65 @@ const QuestionsScreen = () => {
     );
   };
 
+  if (loading && !question) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {/* <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+          >
+            <Ionicons name="chevron-back" size={28} color="white" />
+          </TouchableOpacity>
+        </View> */}
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading question...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Questions</Text>
-      </View>
+      {/* <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+        >
+          <Ionicons name="chevron-back" size={28} color="white" />
+        </TouchableOpacity>
+      </View> */}
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Content */}
         <View style={styles.content}>
           {/* Question */}
           <View style={styles.questionContainer}>
-            <Text style={styles.questionText}>
-              {loading ? "Loading question..." : question.question || "No question available"}
-            </Text>
+            <Text style={styles.sectionTitle}>Question</Text>
+            <View style={styles.questionCard}>
+              <Text style={styles.questionText}>
+                {question.question || "No question available"}
+              </Text>
+            </View>
           </View>
 
           {/* Text Area - Only show before submission */}
           {!hasSubmitted && (
             <View style={styles.textAreaContainer}>
-              <TextInput
-                value={answer}
-                onChangeText={setAnswer}
-                placeholder="Type your answer here...(If answered, try to give another answer to the same question)"
-                placeholderTextColor="#999"
-                multiline={true}
-                textAlignVertical="top"
-                style={styles.textArea}
-                editable={!loading}
-              />
+              <Text style={styles.sectionTitle}>Your Answer</Text>
+              <View style={styles.textAreaWrapper}>
+                <TextInput
+                  value={answer}
+                  onChangeText={setAnswer}
+                  placeholder="Type your answer here...(If answered, try to give another answer to the same question)"
+                  placeholderTextColor="#6b7280"
+                  multiline={true}
+                  textAlignVertical="top"
+                  style={styles.textArea}
+                  editable={!loading}
+                />
+              </View>
             </View>
           )}
 
@@ -240,23 +274,23 @@ const QuestionsScreen = () => {
       {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.secondaryButton}
           onPress={handleBack}
           disabled={loading}
         >
-          <Text style={styles.backButtonText}>Back to Questions</Text>
+          <Text style={styles.secondaryButtonText}>Back to Questions</Text>
         </TouchableOpacity>
         
         {!hasSubmitted ? (
           <TouchableOpacity 
             onPress={handleSubmit} 
             style={[
-              styles.submitButton,
+              styles.primaryButton,
               loading && styles.disabledButton
             ]}
             disabled={loading}
           >
-            <Text style={styles.submitButtonText}>
+            <Text style={styles.primaryButtonText}>
               {loading ? 'Submitting...' : 'Submit'}
             </Text>
           </TouchableOpacity>
@@ -264,12 +298,12 @@ const QuestionsScreen = () => {
           <TouchableOpacity 
             onPress={handleNext} 
             style={[
-              styles.submitButton,
+              styles.primaryButton,
               loading && styles.disabledButton
             ]}
             disabled={loading}
           >
-            <Text style={styles.submitButtonText}>
+            <Text style={styles.primaryButtonText}>
               {loading ? 'Loading...' : 'Next Question'}
             </Text>
           </TouchableOpacity>
@@ -282,48 +316,57 @@ const QuestionsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#1e293b',
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000",
-    marginLeft: 16,
-  },
+  // header: {
+  //   backgroundColor: "#06B6D4",
+  //   paddingVertical: 15,
+  //   paddingHorizontal: 10,
+  //   borderBottomLeftRadius: 25,
+  //   borderBottomRightRadius: 25,
+  // },
+  // backButton: { 
+  //   padding: 5 
+  // },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 20,
+    padding: 16,
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   questionContainer: {
     marginBottom: 24,
   },
+  questionCard: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+  },
   questionText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "500",
-    color: "#000",
-    lineHeight: 28,
+    color: "#111827",
+    lineHeight: 24,
   },
   textAreaContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
+  },
+  textAreaWrapper: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 4,
   },
   textArea: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: "transparent",
+    padding: 12,
     fontSize: 16,
-    color: "#000",
+    color: "#111827",
     minHeight: 120,
     maxHeight: 200,
   },
@@ -332,18 +375,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   answersTitle: {
+    color: 'white',
     fontSize: 18,
     fontWeight: "600",
-    color: "#000",
     marginBottom: 16,
   },
   answerItem: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
+    backgroundColor: "white",
+    borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: "#7dd3c0",
   },
   answerHeader: {
     flexDirection: "row",
@@ -354,15 +395,18 @@ const styles = StyleSheet.create({
   answerAuthor: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#7dd3c0",
+    color: "#111827",
+  },
+  currentUserAnswer: {
+    color: "#06B6D4",
   },
   answerDate: {
     fontSize: 12,
-    color: "#666",
+    color: "#6b7280",
   },
   answerText: {
     fontSize: 16,
-    color: "#333",
+    color: "#111827",
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -378,73 +422,88 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   approvedStatus: {
-    backgroundColor: "#d4edda",
-    color: "#155724",
+    backgroundColor: "#dcfce7",
+    color: "#166534",
   },
   rejectedStatus: {
-    backgroundColor: "#f8d7da",
-    color: "#721c24",
+    backgroundColor: "#fecaca",
+    color: "#991b1b",
   },
   pendingStatus: {
-    backgroundColor: "#fff3cd",
-    color: "#856404",
+    backgroundColor: "#fef3c7",
+    color: "#92400e",
   },
   noAnswersContainer: {
     alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
     paddingVertical: 32,
+    paddingHorizontal: 16,
   },
   noAnswersText: {
     fontSize: 16,
-    color: "#666",
+    color: "#6b7280",
     fontStyle: 'italic',
+    textAlign: 'center',
   },
   answersLoadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
     paddingVertical: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     marginLeft: 8,
     fontSize: 16,
-    color: "#666",
+    color: "white",
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 16,
-    paddingBottom: 34, // Safe area padding for bottom
+    paddingBottom: 34,
     paddingTop: 16,
     gap: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    backgroundColor: "#1e293b",
   },
-  backButton: {
-    flex: 1,
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  secondaryButton: {
+    backgroundColor: "#475569",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+    minWidth: 120,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  backButtonText: {
-    fontSize: 16,
+  secondaryButtonText: {
+    fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: "white",
   },
-  submitButton: {
-    flex: 1,
-    backgroundColor: "#7dd3c0",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  primaryButton: {
+    backgroundColor: "#06B6D4",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#7dd3c0",
+    minWidth: 120,
+    shadowColor: "#06B6D4",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -453,15 +512,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  submitButtonText: {
-    fontSize: 16,
+  primaryButtonText: {
+    fontSize: 14,
     fontWeight: "600",
-    color: "#000",
+    color: "white",
   },
   disabledButton: {
-    backgroundColor: "#ccc",
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: "#64748b",
   },
 });
 

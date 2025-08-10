@@ -17,10 +17,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from 'expo-image-picker';
-import EditProfileModal from "../../components/EditProfileModal";
+import EditProfileModal from "../components/EditProfileModal";
 import { useDispatch, useSelector } from "react-redux";
-import API_ROUTES from "../../api/apiConfig";
-import { loginSuccess } from "../../redux/login/authSlice";
+import API_ROUTES from "../api/apiConfig";
+import { loginSuccess } from "../redux/login/authSlice";
 
 export default function ProfileScreen() {
   const router = useRouter();

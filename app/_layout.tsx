@@ -49,12 +49,12 @@ export default function RootLayout() {
       "StartPage",
       "Onboarding",
       "WordQuestions",
+      "Profile",
       "WordAnswers",
       "QuestionAndAnswer",
       "QuizResult",
     ].includes(segments[0]) &&
-    segments[1] !== "wordScreen" &&
-    segments[1] !== "profile";
+    segments[1] !== "wordScreen";
 
   return (
     <Provider store={store}>
@@ -85,6 +85,7 @@ export default function RootLayout() {
               <Stack.Screen name="WordQuestions" />
               <Stack.Screen name="WordAnswers" />
               <Stack.Screen name="QuizResult" />
+              <Stack.Screen name="Profile" />
               <Stack.Screen name="WordAnswering" />
             </Stack>
           </View>
