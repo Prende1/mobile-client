@@ -17,6 +17,7 @@ const Navbar = () => {
   const handleDiscussionPress = () => {
     // Add your discussion navigation logic here
     console.log("Discussion button pressed");
+    router.push("/Discussion");
   };
 
   return (

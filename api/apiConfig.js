@@ -4,6 +4,7 @@ const BASE_URL = "https://vocab-server-fkrv.onrender.com/api";
 export const API_ROUTES = {
   login: `${BASE_URL}/users`,
   getUserById: (id) => `${BASE_URL}/users/${id}`, // Fetch user by ID
+  getAllUsers: `${BASE_URL}/users`, // Fetch all users
   updateUser: (id) => `${BASE_URL}/users/${id}`, // Update user profile
   startQuizSession: `${BASE_URL}/start-quiz`, // Fetch all quizzes
   getNextQuestion: (quizId) => `${BASE_URL}/next-question/${quizId}`, // Fetch next question in a quiz

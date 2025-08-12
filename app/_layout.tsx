@@ -50,6 +50,7 @@ export default function RootLayout() {
       "Onboarding",
       "WordQuestions",
       "Profile",
+      "Discussion",
       "WordAnswers",
       "QuestionAndAnswer",
       "QuizResult",
@@ -87,6 +88,7 @@ export default function RootLayout() {
               <Stack.Screen name="QuizResult" />
               <Stack.Screen name="Profile" />
               <Stack.Screen name="WordAnswering" />
+              <Stack.Screen name="Discussion" />
             </Stack>
           </View>
 
