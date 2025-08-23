@@ -89,6 +89,7 @@ export default function RootLayout() {
               <Stack.Screen name="Profile" />
               <Stack.Screen name="WordAnswering" />
               <Stack.Screen name="Discussion" />
+              <Stack.Screen name="ChatScreen" />
             </Stack>
           </View>
 

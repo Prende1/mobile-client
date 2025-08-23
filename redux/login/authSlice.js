@@ -6,6 +6,7 @@ const initialState = {
   loading: false,
   error: null,
   token:"",
+  connectUser: null, // User currently connected in chat
 };
 
 const authSlice = createSlice({
@@ -32,8 +33,11 @@ const authSlice = createSlice({
     setToken: (state, action) => {
       state.token = action.payload;
     },
+    setConnectUser:(state, action) => {
+      state.connectUser = action.payload;
+    },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout,setToken } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout,setToken,setConnectUser } = authSlice.actions;
 export default authSlice.reducer;

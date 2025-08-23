@@ -17,6 +17,7 @@ import {
 } from "../redux/login/authSlice";
 import API_ROUTES from "../api/apiConfig";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -42,6 +43,7 @@ const Login = () => {
         const data = await response.json();
         dispatch(loginSuccess(data.user));
         dispatch(setToken(data.token));
+        await AsyncStorage.setItem("authToken", data.token);
         console.log("User logged in:", data.user);
         router.replace("/(tabs)");
       } else {

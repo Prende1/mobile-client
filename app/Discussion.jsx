@@ -9,7 +9,10 @@ import {
   SafeAreaView,
 } from 'react-native';
 import API_ROUTES from '../api/apiConfig';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import SocketService from '../services/socket_service';
+import { setConnectUser } from "../redux/login/authSlice";
+import { useRouter } from 'expo-router';
 
 // Menu Icon Component
 const MenuIcon = () => (
@@ -21,12 +24,38 @@ const MenuIcon = () => (
 );
 
 const Discussion = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
   const [users, setUsers] = useState([]);
-  const { token } = useSelector((state) => state.auth);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const { token, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     getAllUsers();
+    initializeSocket();
+
+    return () => {
+      // Clean up socket listeners when component unmounts
+      SocketService.removeListener('users_online');
+    };
   }, []);
+
+  const initializeSocket = async () => {
+    try {
+      // Connect to socket
+      if (!SocketService.isSocketConnected()) {
+        await SocketService.connect();
+      }
+
+      // Listen for online users
+      SocketService.onUsersOnline((users) => {
+        setOnlineUsers(users);
+      });
+
+    } catch (error) {
+      console.error('Socket initialization error:', error);
+    }
+  };
 
   const getAllUsers = async () => {
     try {
@@ -42,27 +71,38 @@ const Discussion = () => {
     }
   };
 
+  // Check if user is online
+  const isUserOnline = (userId) => {
+    return onlineUsers.some(onlineUser => onlineUser.userId === userId);
+  };
+
   // Map users as individual chat conversations
-  const chatList = users.map((user, index) => ({
-    id: user._id,
-    name: user.username,
-    lastMessage: "Start a conversation...",
-    avatar: user.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face",
-    level: user.level,
-    isOnline: Math.random() > 0.5, // Random online status for demo
-    timestamp: "now",
-    user: user
-  }));
+  const chatList = users
+    .filter(chatUser => chatUser._id !== user._id) // Exclude current user
+    .map((chatUser, index) => ({
+      id: chatUser._id,
+      name: chatUser.username,
+      lastMessage: "Start a conversation...",
+      avatar: chatUser.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face",
+      level: chatUser.level,
+      isOnline: isUserOnline(chatUser._id),
+      timestamp: "now",
+      user: chatUser
+    }));
 
   const handleChatPress = (chat) => {
     console.log('Selected chat with:', chat.name);
     console.log('User data:', chat.user);
-    // Add your navigation to chat screen logic here
+    
+    // Navigate to chat screen
+    dispatch(setConnectUser(chat));
+    router.push("ChatScreen");
   };
 
   const handleStartNewChat = () => {
     console.log('Start new chat pressed');
-    // Add your start new chat logic here
+    // You can navigate to a user selection screen or implement search functionality
+    // navigation.navigate('SelectUserScreen');
   };
 
   return (
