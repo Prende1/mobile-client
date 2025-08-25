@@ -21,7 +21,6 @@ const ChatScreen = () => {
   //   const { recipient } = route.params; // recipient user object
   const router = useRouter();
   const recipient = useSelector((state) => state.auth.connectUser);
-  console.log("Recipient:", recipient);
   const { user, token } = useSelector((state) => state.auth);
 
   const [messages, setMessages] = useState([]);
