@@ -553,6 +553,7 @@ const QuizScreen = () => {
   };
 
   const handleAnswerSelect = (answer) => {
+    console.log("Selected answer:", answer);
     if (!answerSubmitted) {
       setSelectedAnswer(answer);
     }
@@ -680,9 +681,9 @@ const QuizScreen = () => {
         {selectedAnswer && answerSubmitted && (
           <View style={styles.explanationContainer}>
             <ExplanationCard
-              isCorrect={selectedAnswer._id === question.correctAnswerId}
+              isCorrect={selectedAnswer.isCorrect}
               explanation={
-                selectedAnswer.reson || "No explanation available."
+                selectedAnswer.reason || "No explanation available."
               }
             />
           </View>

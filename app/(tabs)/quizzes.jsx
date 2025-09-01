@@ -113,6 +113,9 @@ const Quizzes = () => {
           <Text style={styles.statusText}>
             Status: {item.correct ? "Correct" : "Incorrect"}
           </Text>
+          <Text style={styles.statusText}>
+            Answer: {item.answerTitle}
+          </Text>
         </View>
         
         <View style={styles.quizRight}>
