@@ -1,4 +1,4 @@
-// services/SocketService.js
+// services/socket_service.js
 import io from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -14,7 +14,7 @@ class SocketService {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (!token) {
-        console.log("AUth token", token);
+        console.log("Auth token", token);
         throw new Error('No authentication token found');
       }
 
@@ -103,6 +103,98 @@ class SocketService {
     }
   }
 
+  // === CALL MANAGEMENT METHODS ===
+
+  // Initiate a call
+  initiateCall(recipientId, topic) {
+    if (this.socket && this.isConnected) {
+      const callId = this.generateCallId();
+      this.socket.emit('initiate_call', {
+        recipientId,
+        topic,
+        callId
+      });
+      return callId;
+    }
+    return null;
+  }
+
+  // Send call request
+  sendCallRequest(recipientId, topic, callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('call_request', {
+        recipientId,
+        topic,
+        callId
+      });
+    }
+  }
+
+  // Accept call
+  acceptCall(callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('accept_call', { callId });
+    }
+  }
+
+  // Decline call
+  declineCall(callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('decline_call', { callId });
+    }
+  }
+
+  // End call
+  endCall(callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('end_call', { callId });
+    }
+  }
+
+  // Send speaker change notification
+  sendSpeakerChange(callId, speakerId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('speaker_change', { callId, speakerId });
+    }
+  }
+
+  // === WEBRTC SIGNALING METHODS ===
+
+  // Send WebRTC offer
+  sendWebRTCOffer(recipientId, offer, callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('webrtc_offer', {
+        to: recipientId,
+        offer,
+        callId
+      });
+    }
+  }
+
+  // Send WebRTC answer
+  sendWebRTCAnswer(recipientId, answer, callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('webrtc_answer', {
+        to: recipientId,
+        answer,
+        callId
+      });
+    }
+  }
+
+  // Send ICE candidate
+  sendWebRTCIceCandidate(recipientId, candidate, callId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('webrtc_ice_candidate', {
+        to: recipientId,
+        candidate,
+        callId
+      });
+    }
+  }
+
+  // === EVENT LISTENERS ===
+
   // Listen for new messages
   onReceiveMessage(callback) {
     if (this.socket) {
@@ -151,6 +243,74 @@ class SocketService {
     }
   }
 
+  // === CALL EVENT LISTENERS ===
+
+  // Listen for call requests
+  onCallRequest(callback) {
+    if (this.socket) {
+      this.socket.on('call_request', callback);
+      this.listeners.set('call_request', callback);
+    }
+  }
+
+  // Listen for call accepted
+  onCallAccepted(callback) {
+    if (this.socket) {
+      this.socket.on('call_accepted', callback);
+      this.listeners.set('call_accepted', callback);
+    }
+  }
+
+  // Listen for call declined
+  onCallDeclined(callback) {
+    if (this.socket) {
+      this.socket.on('call_declined', callback);
+      this.listeners.set('call_declined', callback);
+    }
+  }
+
+  // Listen for call ended
+  onCallEnded(callback) {
+    if (this.socket) {
+      this.socket.on('call_ended', callback);
+      this.listeners.set('call_ended', callback);
+    }
+  }
+
+  // Listen for speaker changes
+  onSpeakerChange(callback) {
+    if (this.socket) {
+      this.socket.on('speaker_change', callback);
+      this.listeners.set('speaker_change', callback);
+    }
+  }
+
+  // === WEBRTC EVENT LISTENERS ===
+
+  // Listen for WebRTC offers
+  onWebRTCOffer(callback) {
+    if (this.socket) {
+      this.socket.on('webrtc_offer', callback);
+      this.listeners.set('webrtc_offer', callback);
+    }
+  }
+
+  // Listen for WebRTC answers
+  onWebRTCAnswer(callback) {
+    if (this.socket) {
+      this.socket.on('webrtc_answer', callback);
+      this.listeners.set('webrtc_answer', callback);
+    }
+  }
+
+  // Listen for ICE candidates
+  onWebRTCIceCandidate(callback) {
+    if (this.socket) {
+      this.socket.on('webrtc_ice_candidate', callback);
+      this.listeners.set('webrtc_ice_candidate', callback);
+    }
+  }
+
   // Remove specific listener
   removeListener(event) {
     if (this.socket && this.listeners.has(event)) {
@@ -169,9 +329,16 @@ class SocketService {
     }
   }
 
+  // === UTILITY METHODS ===
+
   // Generate room ID (same logic as backend)
   generateRoomId(userId1, userId2) {
     return [userId1, userId2].sort().join('_');
+  }
+
+  // Generate call ID
+  generateCallId() {
+    return `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }
 

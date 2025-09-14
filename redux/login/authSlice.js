@@ -7,6 +7,9 @@ const initialState = {
   error: null,
   token:"",
   connectUser: null, // User currently connected in chat
+  audioTopic: null, // Topic for audio discussion
+  callId: null, // Unique call ID for audio discussion
+  isInitiator: false, // Whether the user initiated the audio discussion
 };
 
 const authSlice = createSlice({
@@ -36,8 +39,13 @@ const authSlice = createSlice({
     setConnectUser:(state, action) => {
       state.connectUser = action.payload;
     },
+    setAudioDiscussion: (state, action) => {
+      state.audioTopic = action.payload.topic;
+      state.callId = action.payload.callId;
+      state.isInitiator = action.payload.isInitiator;
+    }
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout,setToken,setConnectUser } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout,setToken,setConnectUser,setAudioDiscussion } = authSlice.actions;
 export default authSlice.reducer;

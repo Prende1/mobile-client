@@ -16,9 +16,11 @@ import {
 import { useSelector } from "react-redux";
 import SocketService from "../services/socket_service";
 import { useRouter } from "expo-router";
+import Icon from 'react-native-vector-icons/Feather';
+import { setAudioDiscussion } from "../redux/login/authSlice";
+import { useDispatch } from "react-redux";
 
 const ChatScreen = () => {
-  //   const { recipient } = route.params; // recipient user object
   const router = useRouter();
   const recipient = useSelector((state) => state.auth.connectUser);
   const { user, token } = useSelector((state) => state.auth);
@@ -28,6 +30,7 @@ const ChatScreen = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [recipientTyping, setRecipientTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -97,6 +100,33 @@ const ChatScreen = () => {
         );
       }
     });
+
+    // Listen for call requests
+    SocketService.onCallRequest((data) => {
+      Alert.alert(
+        "Incoming Call",
+        `${data.fromUser} wants to start a discussion`,
+        [
+          {
+            text: "Decline",
+            style: "cancel",
+            onPress: () => SocketService.declineCall(data.callId)
+          },
+          {
+            text: "Accept",
+            onPress: () => {
+              SocketService.acceptCall(data.callId);
+              dispatch(setAudioDiscussion({
+                callId: data.callId,
+                topic: data.topic,
+                isInitiator: false
+              }));
+              router.push("AudioDiscussion");
+            }
+          }
+        ]
+      );
+    });
   };
 
   const sendMessage = () => {
@@ -143,6 +173,25 @@ const ChatScreen = () => {
     } else if (text.length === 0 && isTyping) {
       handleTyping(false);
     }
+  };
+
+  const handleCall = () => {
+    Alert.alert(
+      "Start Discussion",
+      "Would you like to start an audio discussion?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Start Call",
+          onPress: () => {
+            const topic = "The Impact of Social Media on Society"; // You can make this dynamic
+            const callId = SocketService.initiateCall(recipient.id, topic);
+            dispatch(setAudioDiscussion({ callId, topic, isInitiator: true }));
+            router.push("AudioDiscussion");
+          }
+        }
+      ]
+    );
   };
 
   const scrollToBottom = () => {
@@ -245,6 +294,14 @@ const ChatScreen = () => {
           <Text style={styles.headerName}>{recipient.username}</Text>
           <Text style={styles.headerStatus}>{recipient.level}</Text>
         </View>
+
+        {/* Call Button */}
+        <TouchableOpacity
+          onPress={handleCall}
+          style={styles.callButton}
+        >
+          <Icon name="phone" size={20} color="#3b82f6" />
+        </TouchableOpacity>
       </View>
 
       {/* Messages */}
@@ -333,6 +390,11 @@ const styles = StyleSheet.create({
   headerStatus: {
     fontSize: 14,
     color: "#6b7280",
+  },
+  callButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f0f9ff",
   },
   chatContainer: {
     flex: 1,
