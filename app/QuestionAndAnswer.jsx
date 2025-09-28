@@ -141,8 +141,6 @@ const AccordionItem = ({
 
 export default function QuestionAndAnswer() {
   const [expandedItems, setExpandedItems] = useState(new Set());
-  const [selectedMainFilter, setSelectedMainFilter] = useState("Definition");
-  const [selectedSubFilter, setSelectedSubFilter] = useState("Definition");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
@@ -309,12 +307,6 @@ export default function QuestionAndAnswer() {
       router.push("WordAnswers");
     };
 
-  const mainFilters = ["Definition", "Children Definition", "Primary Def"];
-
-  const handleMainFilterPress = (filter) => {
-    setSelectedMainFilter(filter);
-  };
-
   // Separate handler for Questions button
   const handleQuestionsPress = () => {
     router.push("WordQuestions");
@@ -333,47 +325,6 @@ export default function QuestionAndAnswer() {
           <Ionicons name="chevron-back" size={28} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{currentWord}</Text>
-      </View>
-
-      {/* Main Filter Buttons */}
-      <View style={styles.filterContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.mainFilterScroll}
-        >
-          {mainFilters.map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              onPress={() => handleMainFilterPress(filter)}
-              style={[
-                styles.filterButton,
-                selectedMainFilter === filter && styles.filterButtonActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  selectedMainFilter === filter && styles.filterButtonTextActive,
-                ]}
-              >
-                {filter}
-                {filter !== "Primary Def" && " +"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Sub Filter Section with Questions Button */}
-        <View style={styles.subFilterContainer}>
-          <TouchableOpacity
-            style={styles.questionsButton}
-            onPress={handleQuestionsPress}
-          >
-            <Ionicons name="add-circle-outline" size={16} color="#06B6D4" />
-            <Text style={styles.questionsButtonText}>Go to Questions</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Accordion Content */}
@@ -417,6 +368,17 @@ export default function QuestionAndAnswer() {
           )}
         </View>
       </ScrollView>
+
+      {/* Bottom Go to Questions Button */}
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity 
+          style={styles.goToQuestionsButton} 
+          onPress={handleQuestionsPress}
+        >
+          <Text style={styles.goToQuestionsButtonText}>Go to Questions</Text>
+          <Ionicons name="add-circle-outline" size={20} color="white" style={styles.addIcon} />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -424,7 +386,8 @@ export default function QuestionAndAnswer() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#1E293B" 
+    backgroundColor: "#1E293B",
+    // paddingBottom: 70, // Add padding to prevent content from being hidden behind bottom button
   },
   header: {
     backgroundColor: "#06B6D4",
@@ -444,55 +407,9 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginLeft: 8,
   },
-  // Enhanced filter container styles from WordAnswers
-  filterContainer: {
-    backgroundColor: "#1E293B",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  mainFilterScroll: {
-    marginBottom: 12,
-  },
-  filterButton: {
-    backgroundColor: "#475569",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: "#64748b",
-  },
-  filterButtonText: {
-    color: "#d1d5db",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  filterButtonTextActive: {
-    color: "white",
-  },
-  subFilterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  questionsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E40AF",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  questionsButtonText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
   scrollContainer: {
     flex: 1,
+    // paddingBottom: 90, // Add padding to prevent content from being hidden behind bottom button
   },
   accordionList: {
     padding: 16,
@@ -745,5 +662,39 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     marginTop: 4,
     textAlign: "center",
+  },
+  // Bottom container styles (similar to the second component)
+  bottomContainer: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#374151',
+  },
+  goToQuestionsButton: {
+    backgroundColor: '#06B6D4',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#06B6D4',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  goToQuestionsButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  addIcon: {
+    marginLeft: 4,
   },
 });

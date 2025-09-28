@@ -14,7 +14,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [level, setLevel] = useState('');
@@ -25,7 +24,6 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
   // Initialize form with userProfile data when modal opens
   useEffect(() => {
     if (visible && userProfile) {
-      setUsername(userProfile.username || '');
       setEmail(userProfile.email || '');
       setPhone(userProfile.phone || '');
       setLevel(userProfile.level || 'Beginner');
@@ -34,7 +32,6 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
 
   const resetForm = () => {
     if (userProfile) {
-      setUsername(userProfile.username || '');
       setEmail(userProfile.email || '');
       setPhone(userProfile.phone || '');
       setLevel(userProfile.level || 'Beginner');
@@ -59,16 +56,6 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!username.trim()) {
-      Alert.alert('Error', 'Username is required');
-      return;
-    }
-
-    if (username.trim().length < 2) {
-      Alert.alert('Error', 'Username must be at least 2 characters long');
-      return;
-    }
-
     if (!email.trim()) {
       Alert.alert('Error', 'Email is required');
       return;
@@ -88,7 +75,7 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
       setLoading(true);
       
       const updatedProfile = {
-        username: username.trim(),
+        username: userProfile?.username, // Keep original username unchanged
         email: email.trim(),
         phone: phone.trim(),
         level: level,
@@ -157,19 +144,17 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-              {/* Username Input */}
+              {/* Username Display (Read-only) */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Username *</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter your username"
-                  placeholderTextColor="#9ca3af"
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                />
+                <Text style={styles.label}>Username</Text>
+                <View style={styles.readOnlyInput}>
+                  <Text style={styles.readOnlyText}>
+                    {userProfile?.username || 'N/A'}
+                  </Text>
+                  <Ionicons name="lock-closed" size={16} color="#9ca3af" />
+                </View>
                 <Text style={styles.helperText}>
-                  Choose a unique username (minimum 2 characters)
+                  Username cannot be changed
                 </Text>
               </View>
 
@@ -214,7 +199,8 @@ const EditProfileModal = ({ visible, userProfile, onClose, onSave }) => {
               <View style={styles.infoContainer}>
                 <Text style={styles.infoTitle}>📝 Profile Update Info:</Text>
                 <Text style={styles.infoText}>• Changes will be saved to your account</Text>
-                <Text style={styles.infoText}>• Username and email must be unique</Text>
+                <Text style={styles.infoText}>• Username cannot be modified after creation</Text>
+                <Text style={styles.infoText}>• Email must be unique and valid</Text>
                 <Text style={styles.infoText}>• Phone number is optional but recommended</Text>
                 <Text style={styles.infoText}>• Level helps us customize your experience</Text>
               </View>
@@ -301,6 +287,21 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: '#111827',
+  },
+  readOnlyInput: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  readOnlyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
   },
   helperText: {
     fontSize: 12,

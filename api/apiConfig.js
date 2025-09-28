@@ -19,6 +19,7 @@ export const API_ROUTES = {
   getAllQuestions: `${BASE_URL}/wordQuestion`, // Fetch all questions of all words
   getRandomQuestion: `${BASE_URL}/wordQuestion/random`, // Fetch a random question from
   createWordQuestion: `${BASE_URL}/wordQuestion`, // Create a new word question
+  deleteWordQuestionById: (id) => `${BASE_URL}/wordQuestion/${id}`, // Delete a word question by ID
   getWordAnswersByWordID: (wordID) => `${BASE_URL}/wordAnswer/word/${wordID}`, // Fetch answers for a specific word by wordID
   getWordAnswers: (wqID) => `${BASE_URL}/wordAnswer/${wqID}`, // Fetch answers for a specific word question
   createWordAnswer: `${BASE_URL}/wordAnswer`, // Create a new word answer

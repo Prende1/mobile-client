@@ -20,7 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import EditProfileModal from "../components/EditProfileModal";
 import { useDispatch, useSelector } from "react-redux";
 import API_ROUTES from "../api/apiConfig";
-import { loginSuccess } from "../redux/login/authSlice";
+import { loginSuccess, logout } from "../redux/login/authSlice";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -54,6 +54,10 @@ export default function ProfileScreen() {
     image: profileImage,
   };
 
+  const handleSignOut = () => {
+    dispatch(logout());
+    router.replace("Login"); // Adjust path as needed for your login screen
+  };
   // Function to get initials from username
   const getInitials = (name) => {
     if (!name) return "JD";
@@ -327,7 +331,7 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={20} color="#666" />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
               <Ionicons name="log-out-outline" size={24} color="#EF4444" />
               <Text style={[styles.actionButtonText, { color: "#EF4444" }]}>Sign Out</Text>
             </TouchableOpacity>

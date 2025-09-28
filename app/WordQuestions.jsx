@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,6 +30,7 @@ const WordQuestions = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deletingQuestionId, setDeletingQuestionId] = useState(null);
   const dispatch = useDispatch();
 
   const getQuestionList = async () => {
@@ -108,6 +110,68 @@ const WordQuestions = () => {
       getQuestionList(); // Refresh the questions list after voting
     } catch (error) {
       console.error("Error during voting:", error);
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId) => {
+    Alert.alert(
+      "Delete Question",
+      "Are you sure you want to delete this question? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => performDeleteQuestion(questionId)
+        }
+      ]
+    );
+  };
+
+  const performDeleteQuestion = async (questionId) => {
+    try {
+      setDeletingQuestionId(questionId);
+      
+      const response = await fetch(API_ROUTES.deleteWordQuestionById(questionId), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        console.log("Question deleted successfully:", result);
+        // Refresh the questions list after successful deletion
+        await getQuestionList();
+        Alert.alert("Success", "Question deleted successfully!");
+      } else {
+        console.error("Error deleting question:", result);
+        
+        // Handle specific error cases
+        if (response.status === 400 && result.error?.includes("Cannot delete question with answers")) {
+          Alert.alert(
+            "Cannot Delete Question", 
+            "This question cannot be deleted because it has answers. Questions with answers are preserved to maintain the integrity of discussions.",
+            [{ text: "OK", style: "default" }]
+          );
+        } else if (response.status === 404) {
+          Alert.alert("Error", "Question not found. It may have already been deleted.");
+          // Refresh the list in case the question was already deleted
+          await getQuestionList();
+        } else {
+          Alert.alert("Error", result.error || result.message || "Failed to delete question");
+        }
+      }
+    } catch (error) {
+      console.error("Error during question deletion:", error);
+      Alert.alert("Error", "An error occurred while deleting the question. Please check your connection and try again.");
+    } finally {
+      setDeletingQuestionId(null);
     }
   };
 
@@ -255,7 +319,28 @@ const WordQuestions = () => {
                 >
                   <View style={styles.questionContent}>
                     <View style={styles.questionLeft}>
-                      <Text style={styles.questionTitle}>{question.title}</Text>
+                      <View style={styles.questionHeader}>
+                        <Text style={styles.questionTitle}>{question.title}</Text>
+                        {question.originalCreator === currentUsername && (
+                          <TouchableOpacity
+                            style={[
+                              styles.deleteButton,
+                              deletingQuestionId === question.id && styles.deleteButtonDisabled
+                            ]}
+                            onPress={(e) => {
+                              e.stopPropagation(); // Prevent triggering the question press
+                              handleDeleteQuestion(question.id);
+                            }}
+                            disabled={deletingQuestionId === question.id}
+                          >
+                            {deletingQuestionId === question.id ? (
+                              <Text style={styles.deleteButtonText}>...</Text>
+                            ) : (
+                              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                            )}
+                          </TouchableOpacity>
+                        )}
+                      </View>
                       <Text style={styles.creatorText}>
                         Created by{" "}
                         <Text style={[
@@ -411,11 +496,34 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 16,
   },
+  questionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
   questionTitle: {
     color: '#111827',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 6,
+    borderRadius: 4,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  deleteButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#f9fafb',
+    borderColor: '#e5e7eb',
+  },
+  deleteButtonText: {
+    color: '#9ca3af',
+    fontSize: 14,
   },
   creatorText: {
     color: '#6b7280',
